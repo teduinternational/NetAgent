@@ -1,0 +1,26 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="8.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="8.0.2" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.1" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="8.0.1" />
+    <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="8.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\NetAgent.Core\NetAgent.Core.csproj" />
+    <ProjectReference Include="..\NetAgent.LLM.Factory\NetAgent.LLM.Factory.csproj" />
+    <ProjectReference Include="..\NetAgent.Memory.InMemory\NetAgent.Memory.InMemory.csproj" />
+    <ProjectReference Include="..\NetAgent.Planner.Default\NetAgent.Planner.Default.csproj" />
+    <ProjectReference Include="..\NetAgent.Runtime\NetAgent.Runtime.csproj" />
+    <ProjectReference Include="..\NetAgent.Tools.Standard\NetAgent.Tools.Standard.csproj" />
+  </ItemGroup>
+
+</Project>
