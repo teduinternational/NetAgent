@@ -22,4 +22,10 @@
     <ProjectReference Include="..\..\src\NetAgent.Tools.Standard\NetAgent.Tools.Standard.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="appsettings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

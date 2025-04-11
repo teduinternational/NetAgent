@@ -19,6 +19,11 @@ using NetAgent.Runtime.PostProcessing;
 using NetAgent.Strategy;
 using NetAgent.Evaluation.Interfaces;
 using NetAgent.Optimization.Interfaces;
+using NetAgent.LLM.Extensions;
+using NetAgent.Evaluation.Evaluators;
+using NetAgent.LLM.Scoring;
+using NetAgent.Runtime.Extensions;
+using NetAgent.Strategy.Extensions;
 
 namespace NetAgent.Hosting.Extensions
 {
@@ -29,7 +34,7 @@ namespace NetAgent.Hosting.Extensions
     {
         private const string CONFIG_ROOT_KEY = "NetAgent";
         private const string CONFIG_LLM_KEY = "NetAgent:LLM";
-        private const string CONFIG_TOOLS_KEY = "NetAgent:Tools";
+        private const string CONFIG_TOOLS_KEY = "NetAgent:Tools:Types";
         private const string CONFIG_PLANNER_KEY = "NetAgent:Planner:Type";
         private const string CONFIG_MEMORY_KEY = "NetAgent:Memory:Type";
         private const string CONFIG_CONTEXT_KEY = "NetAgent:Context:Type";
@@ -82,7 +87,9 @@ namespace NetAgent.Hosting.Extensions
             services.AddMemoryProviderFromConfig(configuration);
             services.AddPlannerFromConfig(configuration);
             services.AddContextSourceFromConfig(configuration);
-
+            services.AddMultiLLMProvider();
+            services.AddPostProcessors(configuration);
+            services.AddDefaultStrategy();
             logger?.LogInformation("Providers registered successfully");
         }
 

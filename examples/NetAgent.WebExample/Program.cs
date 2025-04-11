@@ -12,7 +12,6 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddPostProcessors(builder.Configuration);
-builder.Services.AddMultiLLMProvider();
 
 var app = builder.Build();
 

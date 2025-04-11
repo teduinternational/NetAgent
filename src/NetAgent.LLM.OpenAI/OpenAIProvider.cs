@@ -1,6 +1,8 @@
 ﻿using NetAgent.Abstractions.LLM;
 using OpenAI_API;
 using System;
+using System.Net;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace NetAgent.LLM.OpenAI
