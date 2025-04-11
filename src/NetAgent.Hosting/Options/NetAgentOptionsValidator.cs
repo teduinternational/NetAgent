@@ -11,53 +11,70 @@ namespace NetAgent.Hosting.Options
                 return ValidateOptionsResult.Fail("Options cannot be null");
             }
 
-            if (string.IsNullOrEmpty(options.LLM.Provider))
+            if (options.LLM == null)
             {
-                return ValidateOptionsResult.Fail("Provider must be specified");
+                return ValidateOptionsResult.Fail("LLM options must be specified");
             }
 
-            // Add LLM provider specific validation
-            switch (options.LLM.Provider.ToLowerInvariant())
+            // Check if either Provider or Providers is specified
+            if (string.IsNullOrEmpty(options.LLM.Provider) && (options.LLM.Providers == null || options.LLM.Providers.Length == 0))
             {
-                case "openai":
-                    if (options.LLM.OpenAI == null)
-                    {
-                        return ValidateOptionsResult.Fail("OpenAI configuration is required when using OpenAI provider");
-                    }
-                    if (string.IsNullOrEmpty(options.LLM.OpenAI.ApiKey))
-                    {
-                        return ValidateOptionsResult.Fail("OpenAI ApiKey is required");
-                    }
-                    break;
+                return ValidateOptionsResult.Fail("Either Provider or Providers must be specified");
+            }
 
-                case "azureopenai":
-                    if (options.LLM.AzureOpenAI == null)
-                    {
-                        return ValidateOptionsResult.Fail("Azure OpenAI configuration is required when using Azure OpenAI provider");
-                    }
-                    if (string.IsNullOrEmpty(options.LLM.AzureOpenAI.Endpoint))
-                    {
-                        return ValidateOptionsResult.Fail("Azure OpenAI Endpoint is required");
-                    }
-                    if (string.IsNullOrEmpty(options.LLM.AzureOpenAI.ApiKey))
-                    {
-                        return ValidateOptionsResult.Fail("Azure OpenAI ApiKey is required");
-                    }
-                    break;
+            var providers = options.LLM.Providers ?? new[] { options.LLM.Provider! };
+            foreach (var provider in providers)
+            {
+                // Add LLM provider specific validation
+                switch (provider.ToLowerInvariant())
+                {
+                    case "openai":
+                        if (options.LLM.OpenAI == null)
+                        {
+                            return ValidateOptionsResult.Fail($"OpenAI configuration is required when using OpenAI provider");
+                        }
+                        if (string.IsNullOrEmpty(options.LLM.OpenAI.ApiKey))
+                        {
+                            return ValidateOptionsResult.Fail("OpenAI ApiKey is required");
+                        }
+                        break;
 
-                case "ollama":
-                    if (options.LLM.Ollama == null)
-                    {
-                        return ValidateOptionsResult.Fail("Ollama configuration is required when using Ollama provider");
-                    }
-                    if (string.IsNullOrEmpty(options.LLM.Ollama.Host))
-                    {
-                        return ValidateOptionsResult.Fail("Ollama Endpoint is required");
-                    }
-                    break;
+                    case "claude":
+                        if (options.LLM.Claude == null)
+                        {
+                            return ValidateOptionsResult.Fail($"Claude configuration is required when using Claude provider");
+                        }
+                        if (string.IsNullOrEmpty(options.LLM.Claude.ApiKey))
+                        {
+                            return ValidateOptionsResult.Fail("Claude ApiKey is required");
+                        }
+                        break;
 
-                default:
-                    return ValidateOptionsResult.Fail($"Unsupported provider: {options.LLM.Provider}");
+                    case "deepseek":
+                        if (options.LLM.DeepSeek == null)
+                        {
+                            return ValidateOptionsResult.Fail($"DeepSeek configuration is required when using DeepSeek provider");
+                        }
+                        if (string.IsNullOrEmpty(options.LLM.DeepSeek.ApiKey))
+                        {
+                            return ValidateOptionsResult.Fail("DeepSeek ApiKey is required");
+                        }
+                        break;
+
+                    case "grok":
+                        if (options.LLM.Grok == null)
+                        {
+                            return ValidateOptionsResult.Fail($"Grok configuration is required when using Grok provider");
+                        }
+                        if (string.IsNullOrEmpty(options.LLM.Grok.ApiKey))
+                        {
+                            return ValidateOptionsResult.Fail("Grok ApiKey is required");
+                        }
+                        break;
+
+                    default:
+                        return ValidateOptionsResult.Fail($"Unsupported LLM provider: {provider}");
+                }
             }
 
             return ValidateOptionsResult.Success;

@@ -5,6 +5,12 @@ using NetAgent.Hosting.Extensions;
 using NetAgent.Abstractions.Models;
 using Microsoft.Extensions.Configuration;
 using NetAgent.Abstractions;
+using NetAgent.LLM.Extensions;
+using NetAgent.LLM.Factory;
+using NetAgent.Abstractions.LLM;
+using NetAgent.LLM.OpenAI;
+using NetAgent.LLM.Claude;
+using NetAgent.LLM.DeepSeek;
 
 class Program
 {
@@ -12,21 +18,45 @@ class Program
     {
         var builder = Host.CreateApplicationBuilder(args);
         
-        // Đọc configuration từ appsettings.json
+        // Read configuration from appsettings.json
         builder.Configuration.SetBasePath(Directory.GetCurrentDirectory())
             .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
             .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true)
             .AddEnvironmentVariables();
 
-        // Thêm NetAgent services với configuration
+        // Add NetAgent services with configuration
         builder.Services.AddNetAgentFromConfig(builder.Configuration);
+
+        // Add different LLM providers
+        builder.Services.AddSingleton<ILLMProvider>(sp => 
+            LLMProviderFactory.Create(new LLMFactoryOptions 
+            { 
+                Provider = LLMProviderType.OpenAI,
+                OpenAI = new OpenAIOptions { Model = "gpt-4" }
+            }));
+
+        builder.Services.AddSingleton<ILLMProvider>(sp => 
+            LLMProviderFactory.Create(new LLMFactoryOptions 
+            { 
+                Provider = LLMProviderType.Claude,
+                Claude = new ClaudeLLMOptions { Model = "claude-3-opus-20240229" }
+            }));
+
+        builder.Services.AddSingleton<ILLMProvider>(sp => 
+            LLMProviderFactory.Create(new LLMFactoryOptions 
+            { 
+                Provider = LLMProviderType.DeepSeek,
+                DeepSeek = new DeepSeekOptions { Model = "deepseek-chat" }
+            }));
+
+        builder.Services.AddMultiLLMProvider(); // Add MultiLLMProvider support
 
         var host = builder.Build();
         var serviceProvider = host.Services;
 
-        // Create three agents with different roles
+        // Create agents using registered MultiLLMProvider
         var agentFactory = serviceProvider.GetRequiredService<IAgentFactory>();
-        
+
         var developerAgent = await agentFactory.CreateAgent(new AgentOptions 
         { 
             Name = "Developer",
@@ -40,7 +70,8 @@ class Program
             {
                 MaxTokens = 4000,
                 RelevanceThreshold = 0.7f
-            }
+            },
+            PreferredProviders = new[] { "OpenAI", "Claude" }, // Specify preferred providers for developer agent
         });
 
         var productOwnerAgent = await agentFactory.CreateAgent(new AgentOptions 
@@ -56,7 +87,8 @@ class Program
             {
                 MaxTokens = 3000,
                 RelevanceThreshold = 0.8f
-            }
+            },
+            PreferredProviders = new[] { "Claude" }, // Product Owner prefers Claude
         });
 
         var scrumMasterAgent = await agentFactory.CreateAgent(new AgentOptions 
@@ -72,7 +104,8 @@ class Program
             {
                 MaxTokens = 3000,
                 RelevanceThreshold = 0.75f
-            }
+            },
+            PreferredProviders = new[] { "DeepSeek", "OpenAI" }, // Scrum Master can use DeepSeek or OpenAI
         });
 
         // Start the discussion about Azure SSO authentication story

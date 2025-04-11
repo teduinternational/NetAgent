@@ -1,8 +1,9 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using NetAgent.Abstractions.LLM;
 using NetAgent.Core.Planning;
-using NetAgent.LLM.AzureOpenAI;
-using NetAgent.LLM.Ollama;
+using NetAgent.LLM.Claude;
+using NetAgent.LLM.DeepSeek;
+using NetAgent.LLM.Grok;
 using NetAgent.LLM.OpenAI;
 using NetAgent.Planner.Default;
 
@@ -22,15 +23,21 @@ namespace NetAgent.Planner.Extensions
             return services;
         }
 
-        public static IServiceCollection AddAzureOpenAIProvider(this IServiceCollection services, AzureOpenAIOptions options)
+        public static IServiceCollection AddClaudeAIProvider(this IServiceCollection services, ClaudeLLMOptions options)
         {
-            services.AddSingleton<ILLMProvider>(new AzureOpenAIProvider(options));
+            services.AddSingleton<ILLMProvider>(new ClaudeLLMProvider(options));
             return services;
         }
 
-        public static IServiceCollection AddOllamaProvider(this IServiceCollection services, OllamaOptions options)
+        public static IServiceCollection AddDeepSeekProvider(this IServiceCollection services, DeepSeekOptions options)
         {
-            services.AddSingleton<ILLMProvider>(new OllamaProvider(options));
+            services.AddSingleton<ILLMProvider>(new DeepSeekLLMProvider(options));
+            return services;
+        }
+
+        public static IServiceCollection AddGrokProvider(this IServiceCollection services, GrokOptions options)
+        {
+            services.AddSingleton<ILLMProvider>(new GrokLLMProvider(options));
             return services;
         }
     }

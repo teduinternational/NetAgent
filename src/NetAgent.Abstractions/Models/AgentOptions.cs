@@ -57,6 +57,11 @@ namespace NetAgent.Abstractions.Models
         /// Ngôn ngữ giao tiếp của agent
         /// </summary>
         public AgentLanguage Language { get; set; } = AgentLanguage.English;
+
+        /// <summary>
+        /// Danh sách các nhà cung cấp ưu tiên
+        /// </summary>
+        public string[] PreferredProviders { get; set; } = Array.Empty<string>();
     }
 
     /// <summary>

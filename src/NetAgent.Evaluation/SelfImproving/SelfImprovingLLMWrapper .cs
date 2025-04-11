@@ -1,10 +1,11 @@
 ﻿using NetAgent.Evaluation.Interfaces;
 using NetAgent.Optimization.Interfaces;
 using NetAgent.Abstractions.LLM;
+using Microsoft.Extensions.Logging;
 
 namespace NetAgent.Evaluation.SelfImproving
 {
-    public class SelfImprovingLLMWrapper : IMultiLLMProvider
+    public class SelfImprovingLLMWrapper 
     {
         private readonly IMultiLLMProvider _multiLLM;
         private readonly IEvaluator _evaluator;

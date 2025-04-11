@@ -1,6 +1,8 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using NetAgent.Abstractions.LLM;
+using NetAgent.LLM.Scoring;
 
 namespace NetAgent.LLM.Providers
 {
@@ -34,6 +36,21 @@ namespace NetAgent.LLM.Providers
         public async Task<string> GenerateAsync(string prompt, string systemPrompt, string model)
         {
             return await _llm.GenerateAsync(prompt, systemPrompt, model);
+        }
+
+        public IEnumerable<ILLMProvider> GetProviders()
+        {
+            return new[] { _llm };
+        }
+
+        public IResponseScorer GetScorer()
+        {
+            return new DefaultResponseScorer();
+        }
+
+        public ILogger<IMultiLLMProvider> GetLogger()
+        {
+            return null;
         }
     }
 }

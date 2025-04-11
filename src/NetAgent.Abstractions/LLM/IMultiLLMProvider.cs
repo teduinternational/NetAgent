@@ -1,4 +1,4 @@
-using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 
 namespace NetAgent.Abstractions.LLM
 {
@@ -13,5 +13,20 @@ namespace NetAgent.Abstractions.LLM
         /// Sinh kết quả tốt nhất từ các đầu ra theo voting/evaluation.
         /// </summary>
         Task<string> GenerateBestAsync(string prompt);
+
+        /// <summary>
+        /// Lấy danh sách các provider.
+        /// </summary>
+        IEnumerable<ILLMProvider> GetProviders();
+
+        /// <summary>
+        /// Lấy scorer để đánh giá kết quả.
+        /// </summary>
+        IResponseScorer GetScorer();
+
+        /// <summary>
+        /// Lấy logger để ghi log.
+        /// </summary>
+        ILogger<IMultiLLMProvider> GetLogger();
     }
 }

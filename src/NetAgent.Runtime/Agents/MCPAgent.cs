@@ -10,7 +10,9 @@ using NetAgent.Evaluation.Models;
 using NetAgent.Optimization.Interfaces;
 using NetAgent.Runtime.PostProcessing;
 using NetAgent.Strategy;
+using NetAgent.LLM.Preferences;
 using System.Text;
+using NetAgent.LLM.Providers;
 
 namespace NetAgent.Runtime.Agents
 {
@@ -30,6 +32,7 @@ namespace NetAgent.Runtime.Agents
         private readonly IEvaluator _evaluator;
         private readonly IOptimizer _optimizer;
         private readonly AgentOptions _options;
+        private readonly ILLMPreferences? _llmPreferences;
 
         public MCPAgent(
             ILLMProvider llm,
@@ -44,97 +47,82 @@ namespace NetAgent.Runtime.Agents
             IOptimizer optimizer,
             AgentOptions options)
         {
-            _llm = llm;
-            _tools = tools.ToArray();
-            _planner = planner;
-            _contextSource = contextSource;
-            _memory = memoryStore;
-            _postProcessor = postProcessor;
-            _strategy = strategy;
-            _multiLLM = multiLLM;
-            _evaluator = evaluator;
-            _optimizer = optimizer;
-            _options = options;
+            _llm = llm ?? throw new ArgumentNullException(nameof(llm));
+            _tools = tools?.ToArray() ?? throw new ArgumentNullException(nameof(tools));
+            _planner = planner ?? throw new ArgumentNullException(nameof(planner));
+            _contextSource = contextSource ?? throw new ArgumentNullException(nameof(contextSource));
+            _memory = memoryStore ?? throw new ArgumentNullException(nameof(memoryStore));
+            _postProcessor = postProcessor ?? throw new ArgumentNullException(nameof(postProcessor));
+            _strategy = strategy ?? throw new ArgumentNullException(nameof(strategy));
+            _multiLLM = multiLLM ?? throw new ArgumentNullException(nameof(multiLLM));
+            _evaluator = evaluator ?? throw new ArgumentNullException(nameof(evaluator));
+            _optimizer = optimizer ?? throw new ArgumentNullException(nameof(optimizer));
+            _options = options ?? throw new ArgumentNullException(nameof(options));
+            
+            if (options.PreferredProviders?.Any() == true)
+            {
+                _llmPreferences = new LLMPreferences(options.PreferredProviders);
+            }
         }
 
-        public async Task<string> ExecuteGoalAsync(string goal)
+        public string Name => _options.Name ?? "MCPAgent";
+
+        // Implementation của IAgent.ExecuteGoalAsync
+        Task<string> IAgent.ExecuteGoalAsync(string goal)
         {
-            // Bước 1: Lấy context đầu vào
-            var inputContext = await _contextSource.GetContextAsync();
+            return ExecuteGoalAsync(goal, null);
+        }
 
-            // Bước 2: Chiến lược quyết định bước tiếp theo
-            var decision = await _strategy.DecideNextStepAsync(goal, inputContext);
+        public async Task<string> ExecuteGoalAsync(string goal, AgentContext? context = null)
+        {
+            context ??= new AgentContext();
+            context.Goal = goal;
 
-            // Bước 3: Lập kế hoạch dựa trên strategy
-            var plan = await _planner.PlanNextStepAsync(goal, inputContext);
-            foreach (var step in plan.Steps)
+            var prompt = BuildPrompt(context);
+            var relevantMemories = await _memory.RetrieveAsync(prompt);
+
+            // Store memories directly in memory store if not null
+            if (!string.IsNullOrEmpty(relevantMemories))
             {
-                if (!string.IsNullOrWhiteSpace(step.ToolToUse))
-                {
-                    var tool = _tools.FirstOrDefault(t => t.Name == step.ToolToUse);
-                    if (tool != null)
-                    {
-                        var output = await tool.ExecuteAsync(step.Input);
-                        // Lưu từng output vào AgentContext.ToolOutput hoặc log lại từng bước
-                    }
-                }
-
-                if (step.IsFinalStep) break;
-            }
-            // Bước 4: Dùng tool nếu strategy yêu cầu
-            string toolOutput = string.Empty;
-            if (!decision.SkipToolExecution && decision.ToolToUse is not null)
-            {
-                var selectedTool = _tools.FirstOrDefault(t => t.Name == decision.ToolToUse);
-                if (selectedTool is not null)
-                {
-                    toolOutput = await selectedTool.ExecuteAsync(decision.Plan);
-                }
+                await _memory.SaveAsync($"goal_{goal}", relevantMemories);
             }
 
-            // Bước 5: Build context cho LLM
-            var agentContext = new AgentContext
+            string response;
+            if (_multiLLM != null)
             {
-                Goal = goal,
-                Plan = plan.Goal,
-                Context = inputContext.Context,
-                ToolOutput = toolOutput
+                var multiLLMWithPreferences = new MultiLLMProvider(
+                    _multiLLM.GetProviders(),
+                    _multiLLM.GetScorer(),
+                    _multiLLM.GetLogger(),
+                    _llmPreferences
+                );
+                response = await multiLLMWithPreferences.GenerateAsync(prompt, goal, context.ToString() ?? string.Empty);
+            }
+            else
+            {
+                response = await _llm.GenerateAsync(prompt, goal, context.ToString() ?? string.Empty);
+            }
+
+            // Xử lý response bằng cách sử dụng IAgentPostProcessor
+            var result = new AgentResult 
+            { 
+                Output = response,
+                FinalPrompt = prompt 
             };
-
-            // Bước 6: Tạo prompt
-            var finalPrompt = BuildPrompt(agentContext);
-
-            // Bước 7: Gọi MultiLLMProvider để generate nhiều response
-            var responses = await _multiLLM.GenerateFromAllAsync(finalPrompt);
-
-            // Bước 8: Evaluate tất cả response
-            var evaluated = new List<(string response, EvaluationResult result)>();
-            foreach (var r in responses)
+            var inputContext = new AgentInputContext 
+            { 
+                Goal = goal,
+                Context = context?.ToString() ?? string.Empty 
+            };
+            await _postProcessor.PostProcessAsync(result, inputContext);
+            
+            // Lưu response đã xử lý vào memory store
+            if (!string.IsNullOrEmpty(result.Output))
             {
-                var result = await _evaluator.EvaluateAsync(finalPrompt, r, goal, inputContext.Context);
-                evaluated.Add((r, result));
+                await _memory.SaveAsync($"response_{goal}", result.Output);
             }
 
-            // Bước 9: Chọn best response
-            var best = evaluated.OrderByDescending(e => e.result.Score).First();
-
-            // Bước 10: Nếu score thấp thì optimize lại prompt
-            string finalResponse = best.response;
-            if (best.result.Score < 0.7)
-            {
-                var optimizedPrompt = await _optimizer.OptimizeAsync(finalPrompt, goal, inputContext.Context);
-                finalResponse = await _llm.GenerateAsync(optimizedPrompt.OptimizedPrompt);
-            }
-
-            // Bước 11: Lưu vào memory
-            await _memory.SaveAsync(goal, finalResponse);
-
-            // Bước 12: Post-process
-            await _postProcessor.PostProcessAsync(
-                new AgentResult { Output = finalResponse, FinalPrompt = finalPrompt },
-                inputContext);
-
-            return finalResponse;
+            return result.Output;
         }
 
         private string BuildPrompt(AgentContext context)

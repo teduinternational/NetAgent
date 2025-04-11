@@ -122,7 +122,7 @@ namespace NetAgent.Runtime.Agents
             _strategy ??= new GoalDrivenStrategy();
             _evaluator ??= new LLMEvaluator(selectedLLM);
 
-            // If no MultiLLM is provided, create a single-LLM wrapper
+            // If multiLLM is not provided, create a basic implementation that just wraps the single LLM
             var multiLLM = _multiLLMProvider ?? new SingleLLMWrapper(selectedLLM);
 
             return new MCPAgent(
@@ -136,7 +136,8 @@ namespace NetAgent.Runtime.Agents
                 multiLLM,
                 _evaluator,
                 _optimizer,
-                _options);
+                _options
+            );
         }
     }
 }

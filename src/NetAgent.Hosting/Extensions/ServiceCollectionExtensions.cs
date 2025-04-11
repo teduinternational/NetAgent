@@ -161,26 +161,35 @@ namespace NetAgent.Hosting.Extensions
             IConfiguration configuration)
         {
             var options = configuration.GetSection(CONFIG_LLM_KEY).Get<LLMOptions>() ?? new();
+            var providers = options.Providers ?? new[] { options.Provider?.ToLowerInvariant() };
 
-            switch (options.Provider?.ToLowerInvariant())
+            foreach (var provider in providers.Where(p => !string.IsNullOrEmpty(p)))
             {
-                case "openai":
-                    if (options.OpenAI is not null)
-                        services.AddOpenAIProvider(options.OpenAI);
-                    break;
+                switch (provider.ToLowerInvariant())
+                {
+                    case "openai":
+                        if (options.OpenAI is not null)
+                            services.AddOpenAIProvider(options.OpenAI);
+                        break;
 
-                case "azureopenai":
-                    if (options.AzureOpenAI is not null)
-                        services.AddAzureOpenAIProvider(options.AzureOpenAI);
-                    break;
+                    case "claude":
+                        if (options.Claude is not null)
+                            services.AddClaudeAIProvider(options.Claude);
+                        break;
 
-                case "ollama":
-                    if (options.Ollama is not null)
-                        services.AddOllamaProvider(options.Ollama);
-                    break;
+                    case "deepseek":
+                        if (options.DeepSeek is not null)
+                            services.AddDeepSeekProvider(options.DeepSeek);
+                        break;
 
-                default:
-                    throw new InvalidOperationException($"Unsupported LLM Provider: {options.Provider}");
+                    case "grok":
+                        if (options.Grok is not null)
+                            services.AddGrokProvider(options.Grok);
+                        break;
+
+                    default:
+                        throw new InvalidOperationException($"Unsupported LLM Provider: {provider}");
+                }
             }
 
             return services;

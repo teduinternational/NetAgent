@@ -3,7 +3,8 @@
     public enum LLMProviderType
     {
         OpenAI,
-        AzureOpenAI,
-        Ollama
+        Claude,
+        DeepSeek,
+        Grok
     }
 }

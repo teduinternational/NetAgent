@@ -1,7 +1,8 @@
 ﻿using NetAgent.Abstractions.LLM;
-using NetAgent.LLM.AzureOpenAI;
-using NetAgent.LLM.Ollama;
 using NetAgent.LLM.OpenAI;
+using NetAgent.LLM.DeepSeek;
+using NetAgent.LLM.Grok;
+using NetAgent.LLM.Claude;
 
 namespace NetAgent.LLM.Factory
 {
@@ -12,8 +13,9 @@ namespace NetAgent.LLM.Factory
             return options.Provider switch
             {
                 LLMProviderType.OpenAI => new OpenAIProvider(options.OpenAI!),
-                LLMProviderType.AzureOpenAI => new AzureOpenAIProvider(options.AzureOpenAI!),
-                LLMProviderType.Ollama => new OllamaProvider(options.Ollama!),
+                LLMProviderType.Claude => new ClaudeLLMProvider(options.Claude!),
+                LLMProviderType.DeepSeek => new DeepSeekLLMProvider(options.DeepSeek!),
+                LLMProviderType.Grok => new GrokLLMProvider(options.Grok!),
                 _ => throw new NotSupportedException($"Unknown LLM Provider: {options.Provider}")
             };
         }
