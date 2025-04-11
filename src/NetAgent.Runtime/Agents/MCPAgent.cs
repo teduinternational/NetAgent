@@ -10,6 +10,7 @@ using NetAgent.Evaluation.Models;
 using NetAgent.Optimization.Interfaces;
 using NetAgent.Runtime.PostProcessing;
 using NetAgent.Strategy;
+using System.Text;
 
 namespace NetAgent.Runtime.Agents
 {
@@ -28,6 +29,8 @@ namespace NetAgent.Runtime.Agents
         private readonly IMultiLLMProvider _multiLLM;
         private readonly IEvaluator _evaluator;
         private readonly IOptimizer _optimizer;
+        private readonly AgentOptions _options;
+
         public MCPAgent(
             ILLMProvider llm,
             IEnumerable<IAgentTool> tools,
@@ -38,7 +41,8 @@ namespace NetAgent.Runtime.Agents
             IAgentStrategy strategy,
             IMultiLLMProvider multiLLM,
             IEvaluator evaluator,
-            IOptimizer optimizer)
+            IOptimizer optimizer,
+            AgentOptions options)
         {
             _llm = llm;
             _tools = tools.ToArray();
@@ -50,6 +54,7 @@ namespace NetAgent.Runtime.Agents
             _multiLLM = multiLLM;
             _evaluator = evaluator;
             _optimizer = optimizer;
+            _options = options;
         }
 
         public async Task<string> ExecuteGoalAsync(string goal)
@@ -134,13 +139,77 @@ namespace NetAgent.Runtime.Agents
 
         private string BuildPrompt(AgentContext context)
         {
-            return $"""
-                    Goal: {context.Goal}
-                    Context: {context.Context}
-                    Plan: {context.Plan}
-                    Tool Result: {context.ToolOutput}
-                    Answer:
-                    """;
+            var sb = new StringBuilder();
+
+            // Add system message if available
+            if (!string.IsNullOrEmpty(_options.SystemMessage))
+            {
+                sb.AppendLine(_options.SystemMessage);
+                sb.AppendLine();
+            }
+
+            // Add role information
+            if (!string.IsNullOrEmpty(_options.Role))
+            {
+                sb.AppendLine($"Role: {_options.Role}");
+                sb.AppendLine();
+            }
+
+            // Add goals if available
+            if (_options.Goals?.Any() == true)
+            {
+                sb.AppendLine("Goals:");
+                foreach (var goal in _options.Goals)
+                {
+                    sb.AppendLine($"- {goal}");
+                }
+                sb.AppendLine();
+            }
+
+            // Add enabled tools if any
+            if (_options.EnabledTools?.Any() == true)
+            {
+                sb.AppendLine("Available Tools:");
+                foreach (var tool in _options.EnabledTools)
+                {
+                    var toolInfo = _tools.FirstOrDefault(t => t.Name == tool);
+                    if (toolInfo != null)
+                    {
+                        sb.AppendLine($"- {tool}: {toolInfo.Name}");
+                    }
+                }
+                sb.AppendLine();
+            }
+
+            // Add current goal and context
+            sb.AppendLine($"Current Goal: {context.Goal}");
+            
+            if (!string.IsNullOrEmpty(context.Context))
+            {
+                sb.AppendLine("\nContext:");
+                sb.AppendLine(context.Context);
+            }
+
+            if (!string.IsNullOrEmpty(context.Plan))
+            {
+                sb.AppendLine("\nExecution Plan:");
+                sb.AppendLine(context.Plan);
+            }
+
+            if (!string.IsNullOrEmpty(context.ToolOutput))
+            {
+                sb.AppendLine("\nTool Output:");
+                sb.AppendLine(context.ToolOutput);
+            }
+
+            // Add language instruction if not English
+            if (_options.Language != AgentLanguage.English)
+            {
+                sb.AppendLine($"\nPlease respond in {_options.Language}.");
+            }
+
+            sb.AppendLine("\nResponse:");
+            return sb.ToString();
         }
     }
 }

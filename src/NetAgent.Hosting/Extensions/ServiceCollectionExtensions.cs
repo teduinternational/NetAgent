@@ -15,6 +15,10 @@ using NetAgent.Tools.Standard;
 using NetAgent.Planner.Default;
 using NetAgent.Memory.InMemory;
 using NetAgent.Planner.Extensions;
+using NetAgent.Runtime.PostProcessing;
+using NetAgent.Strategy;
+using NetAgent.Evaluation.Interfaces;
+using NetAgent.Optimization.Interfaces;
 
 namespace NetAgent.Hosting.Extensions
 {
@@ -98,8 +102,12 @@ namespace NetAgent.Hosting.Extensions
             IServiceCollection services,
             ILogger? logger)
         {
-            logger?.LogInformation("Registering agent...");
+            logger?.LogInformation("Registering agent and factory...");
 
+            // Register IAgentFactory
+            services.AddSingleton<IAgentFactory, MCPAgentFactory>();
+
+            // Register IAgent as transient for multiple instances
             services.AddTransient<IAgent>(sp =>
             {
                 try
@@ -109,6 +117,10 @@ namespace NetAgent.Hosting.Extensions
                     var memory = sp.GetRequiredService<IMemoryStore>();
                     var planner = sp.GetRequiredService<IAgentPlanner>();
                     var context = sp.GetRequiredService<IContextSource>();
+                    var postProcessor = sp.GetRequiredService<IAgentPostProcessor>();
+                    var strategy = sp.GetRequiredService<IAgentStrategy>();
+                    var evaluator = sp.GetRequiredService<IEvaluator>();
+                    var optimizer = sp.GetRequiredService<IOptimizer>();
 
                     if (!tools.Any())
                     {
@@ -121,16 +133,20 @@ namespace NetAgent.Hosting.Extensions
                         .WithMemory(memory)
                         .WithPlanner(planner)
                         .WithContextSource(context)
+                        .WithPostProcessor(postProcessor)
+                        .WithStrategy(strategy)
+                        .WithEvaluator(evaluator)
+                        .WithOptimizer(optimizer)
                         .Build();
                 }
                 catch (Exception ex)
                 {
                     logger?.LogError(ex, "Failed to create agent instance");
-                    throw new ConfigurationException("Failed to create agent instance", ex);
+                    throw;
                 }
             });
 
-            logger?.LogInformation("Agent registered successfully");
+            logger?.LogInformation("Agent and factory registered successfully");
         }
 
         public static IServiceCollection AddLLMProvidersFromConfig(

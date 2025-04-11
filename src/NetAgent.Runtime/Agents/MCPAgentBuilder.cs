@@ -1,6 +1,7 @@
 ﻿using NetAgent.Abstractions;
 using NetAgent.Abstractions.Tools;
 using NetAgent.Abstractions.LLM;
+using NetAgent.Abstractions.Models;
 using NetAgent.Core.Contexts;
 using NetAgent.Core.Memory;
 using NetAgent.Core.Planning;
@@ -14,6 +15,7 @@ using NetAgent.Optimization.Optimizers;
 using NetAgent.Evaluation.Evaluators;
 using NetAgent.Strategy.Strategies;
 using NetAgent.Planner.Default;
+using NetAgent.LLM.Providers;
 
 namespace NetAgent.Runtime.Agents
 {
@@ -29,6 +31,7 @@ namespace NetAgent.Runtime.Agents
         private IMultiLLMProvider? _multiLLMProvider;
         private IEvaluator? _evaluator;
         private IOptimizer? _optimizer;
+        private AgentOptions? _options;
 
         public MCPAgentBuilder WithLLM(ILLMProvider llm)
         {
@@ -90,30 +93,37 @@ namespace NetAgent.Runtime.Agents
             return this;
         }
 
+        public MCPAgentBuilder WithOptions(AgentOptions options)
+        {
+            _options = options;
+            return this;
+        }
+
         public IAgent Build()
         {
             _tools ??= Array.Empty<IAgentTool>();
             _planner ??= new DefaultPlanner();
             _contextSource ??= new DefaultContextSource();
             _memory ??= new InMemoryMemoryStore();
+            _options ??= new AgentOptions();
+            
+            // Verify LLM providers
+            if (_multiLLMProvider == null && _llm == null)
+            {
+                throw new InvalidOperationException("Either LLM Provider or MultiLLM Provider must be provided.");
+            }
+
+            var selectedLLM = _llm ?? _multiLLMProvider ?? 
+                throw new InvalidOperationException("LLM Provider is missing.");
+            
+            // Initialize remaining dependencies with the selected LLM
+            _optimizer ??= new PromptOptimizer(selectedLLM);
             _postProcessor ??= new OptimizationPostProcessor(_optimizer);
             _strategy ??= new GoalDrivenStrategy();
-            _evaluator ??= new LLMEvaluator(_llm);
-            _optimizer ??= new PromptOptimizer(_multiLLMProvider);
+            _evaluator ??= new LLMEvaluator(selectedLLM);
 
-            ILLMProvider selectedLLM;
-            if (_llm != null)
-            {
-                selectedLLM = _llm;
-            }
-            else if (_multiLLMProvider != null)
-            {
-                selectedLLM = _multiLLMProvider; // fallback to default inside
-            }
-            else
-            {
-                throw new InvalidOperationException("LLM Provider is missing.");
-            }
+            // If no MultiLLM is provided, create a single-LLM wrapper
+            var multiLLM = _multiLLMProvider ?? new SingleLLMWrapper(selectedLLM);
 
             return new MCPAgent(
                 selectedLLM,
@@ -123,10 +133,10 @@ namespace NetAgent.Runtime.Agents
                 _memory,
                 _postProcessor,
                 _strategy,
-                _multiLLMProvider,
+                multiLLM,
                 _evaluator,
-                _optimizer
-            );
+                _optimizer,
+                _options);
         }
     }
 }
