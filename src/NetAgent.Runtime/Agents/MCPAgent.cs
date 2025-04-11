@@ -1,13 +1,12 @@
 ﻿using NetAgent.Abstractions;
 using NetAgent.Abstractions.Models;
 using NetAgent.Abstractions.Tools;
+using NetAgent.Abstractions.LLM;
 using NetAgent.Core.Contexts;
-using NetAgent.Core.LLM;
 using NetAgent.Core.Memory;
 using NetAgent.Core.Planning;
 using NetAgent.Evaluation.Interfaces;
 using NetAgent.Evaluation.Models;
-using NetAgent.LLM.Interfaces;
 using NetAgent.Optimization.Interfaces;
 using NetAgent.Runtime.PostProcessing;
 using NetAgent.Strategy;

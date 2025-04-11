@@ -1,7 +1,6 @@
-﻿using NetAgent.LLM.Interfaces;
-using NetAgent.Evaluation.Interfaces;
+﻿using NetAgent.Evaluation.Interfaces;
 using NetAgent.Optimization.Interfaces;
-using System.Reflection;
+using NetAgent.Abstractions.LLM;
 
 namespace NetAgent.Evaluation.SelfImproving
 {

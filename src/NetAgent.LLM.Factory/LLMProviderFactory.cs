@@ -1,5 +1,5 @@
-﻿using NetAgent.LLM.AzureOpenAI;
-using NetAgent.LLM.Interfaces;
+﻿using NetAgent.Abstractions.LLM;
+using NetAgent.LLM.AzureOpenAI;
 using NetAgent.LLM.Ollama;
 using NetAgent.LLM.OpenAI;
 

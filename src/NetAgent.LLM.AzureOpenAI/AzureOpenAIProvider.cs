@@ -1,7 +1,8 @@
-﻿using NetAgent.LLM.Interfaces;
+﻿using NetAgent.Abstractions.LLM;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
+using System.Threading.Tasks;
 
 namespace NetAgent.LLM.AzureOpenAI
 {
@@ -16,7 +17,7 @@ namespace NetAgent.LLM.AzureOpenAI
             _httpClient = httpClient ?? new HttpClient();
         }
 
-        public string Name { get { return "AzureOpenAI"; } }
+        public string Name => "AzureOpenAI";
 
         public async Task<string> GenerateAsync(string prompt)
         {

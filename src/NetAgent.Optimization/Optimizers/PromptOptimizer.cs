@@ -1,6 +1,7 @@
-﻿using NetAgent.LLM.Interfaces;
+﻿using NetAgent.Abstractions.LLM;
 using NetAgent.Optimization.Interfaces;
 using NetAgent.Optimization.Models;
+using System.Threading.Tasks;
 
 namespace NetAgent.Optimization.Optimizers
 {
@@ -13,41 +14,16 @@ namespace NetAgent.Optimization.Optimizers
             _llm = llm;
         }
 
+
         public async Task<OptimizationResult> OptimizeAsync(string prompt, string goal, string context)
         {
-            var optimizePrompt = $"""
-                You are a prompt engineer. Improve the prompt for better performance in achieving the goal.
-
-                Goal: {goal}
-                Context: {context}
-                Original Prompt: {prompt}
-
-                Return improved prompt followed by suggestions.
-                Format:
-                Optimized Prompt: <optimized>
-                Suggestions: <comma separated suggestions>
-            """;
-
-            var response = await _llm.GenerateAsync(optimizePrompt);
-
-            var optimizedPrompt = Extract(response, "Optimized Prompt:");
-            var suggestions = Extract(response, "Suggestions:")
-                .Split(',').Select(x => x.Trim()).ToArray();
-
+            var newPrompt = $"Optimize this prompt for better results:\n{context}";
+            var optimizedPrompt = await _llm.GenerateAsync(newPrompt);
             return new OptimizationResult
             {
                 OptimizedPrompt = optimizedPrompt,
-                Suggestions = suggestions
+                Suggestions = new[] { "No optimization applied (dummy)" }
             };
-        }
-
-        private static string Extract(string input, string label)
-        {
-            var index = input.IndexOf(label, StringComparison.OrdinalIgnoreCase);
-            if (index == -1) return string.Empty;
-            var rest = input.Substring(index + label.Length).Trim();
-            var nextLabelIndex = rest.IndexOf(':');
-            return nextLabelIndex != -1 ? rest.Substring(0, nextLabelIndex).Trim() : rest;
         }
     }
 }

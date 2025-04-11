@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using NetAgent.Abstractions.LLM;
 using NetAgent.Core.Planning;
 using NetAgent.LLM.AzureOpenAI;
-using NetAgent.LLM.Interfaces;
 using NetAgent.LLM.Ollama;
 using NetAgent.LLM.OpenAI;
 
@@ -33,5 +33,4 @@ namespace NetAgent.Planner.Default.Extensions
             return services;
         }
     }
-
 }

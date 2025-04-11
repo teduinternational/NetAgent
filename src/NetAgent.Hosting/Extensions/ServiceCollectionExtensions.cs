@@ -5,6 +5,8 @@ using Microsoft.Extensions.Options;
 using NetAgent.Runtime.Agents;
 using NetAgent.Hosting.Options;
 using NetAgent.Abstractions;
+using NetAgent.Abstractions.Tools;
+using NetAgent.Abstractions.LLM;
 using NetAgent.Core.Memory;
 using NetAgent.Core.Planning;
 using NetAgent.Core.Contexts;
@@ -13,8 +15,6 @@ using NetAgent.Tools.Standard;
 using NetAgent.Planner.Default.Extensions;
 using NetAgent.Planner.Default;
 using NetAgent.Memory.InMemory;
-using NetAgent.Abstractions.Tools;
-using NetAgent.LLM.Interfaces;
 
 namespace NetAgent.Hosting.Extensions
 {
@@ -30,14 +30,6 @@ namespace NetAgent.Hosting.Extensions
         private const string CONFIG_MEMORY_KEY = "NetAgent:Memory:Type";
         private const string CONFIG_CONTEXT_KEY = "NetAgent:Context:Type";
 
-        /// <summary>
-        /// Adds NetAgent services with configuration
-        /// </summary>
-        /// <param name="services">The service collection</param>
-        /// <param name="configuration">The configuration</param>
-        /// <returns>The service collection</returns>
-        /// <exception cref="ArgumentNullException">Thrown when services or configuration is null</exception>
-        /// <exception cref="ConfigurationException">Thrown when configuration is invalid</exception>
         public static IServiceCollection AddNetAgentFromConfig(
             this IServiceCollection services,
             IConfiguration configuration)
@@ -78,7 +70,7 @@ namespace NetAgent.Hosting.Extensions
         private static void RegisterProviders(
             IServiceCollection services,
             IConfiguration configuration,
-            ILogger logger)
+            ILogger? logger)
         {
             logger?.LogInformation("Registering providers...");
 
@@ -93,7 +85,7 @@ namespace NetAgent.Hosting.Extensions
         private static void RegisterTools(
             IServiceCollection services, 
             IConfiguration configuration,
-            ILogger logger)
+            ILogger? logger)
         {
             logger?.LogInformation("Registering agent tools...");
 
@@ -104,7 +96,7 @@ namespace NetAgent.Hosting.Extensions
 
         private static void RegisterAgent(
             IServiceCollection services,
-            ILogger logger)
+            ILogger? logger)
         {
             logger?.LogInformation("Registering agent...");
 
@@ -124,11 +116,11 @@ namespace NetAgent.Hosting.Extensions
                     }
 
                     return new MCPAgentBuilder()
-                        .UseMultiLLMProvider(llm)
-                        .UseTools(tools)
-                        .UseMemoryStore(memory)
-                        .UsePlanner(planner)
-                        .UseContextSource(context)
+                        .WithMultiLLM(llm)
+                        .WithTools(tools)
+                        .WithMemory(memory)
+                        .WithPlanner(planner)
+                        .WithContextSource(context)
                         .Build();
                 }
                 catch (Exception ex)

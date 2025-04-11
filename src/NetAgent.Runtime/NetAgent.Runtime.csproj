@@ -18,7 +18,9 @@
     <ProjectReference Include="..\NetAgent.Core\NetAgent.Core.csproj" />
     <ProjectReference Include="..\NetAgent.Evaluation\NetAgent.Evaluation.csproj" />
     <ProjectReference Include="..\NetAgent.LLM\NetAgent.LLM.csproj" />
+    <ProjectReference Include="..\NetAgent.Memory.InMemory\NetAgent.Memory.InMemory.csproj" />
     <ProjectReference Include="..\NetAgent.Optimization\NetAgent.Optimization.csproj" />
+    <ProjectReference Include="..\NetAgent.Planner.Default\NetAgent.Planner.Default.csproj" />
     <ProjectReference Include="..\NetAgent.Strategy\NetAgent.Strategy.csproj" />
   </ItemGroup>
 

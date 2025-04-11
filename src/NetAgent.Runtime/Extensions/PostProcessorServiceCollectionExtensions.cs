@@ -7,7 +7,7 @@ using Microsoft.Extensions.Configuration;
 using NetAgent.Optimization.Interfaces;
 using NetAgent.Optimization.Optimizers;
 using NetAgent.Evaluation.Interfaces;
-using NetAgent.LLM.Interfaces;
+using NetAgent.Abstractions.LLM;
 using NetAgent.Abstractions;
 using NetAgent.Runtime.Agents;
 using NetAgent.Evaluation.Evaluators;
@@ -40,14 +40,7 @@ namespace NetAgent.Runtime.Extensions
             services.Configure<NetAgentPostProcessorOptions>(config.GetSection("NetAgent:PostProcessors"));
             services.AddSingleton<IEvaluator, LLMEvaluator>();
             services.AddSingleton<IOptimizer, PromptOptimizer>();
-            services.AddSingleton<IMultiLLMProvider>(sp =>
-            {
-                var multi = sp.GetRequiredService<MultiLLMProvider>();
-                var evaluator = sp.GetRequiredService<IEvaluator>();
-                var optimizer = sp.GetRequiredService<IOptimizer>();
-                return new SelfImprovingLLMWrapper(multi, evaluator, optimizer);
-            });
-            services.AddSingleton<IAgent, MCPAgent>();
+
             return services;
         }
     }
