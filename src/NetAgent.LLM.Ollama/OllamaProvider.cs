@@ -14,7 +14,7 @@ namespace NetAgent.LLM.Ollama
 
         public string Name => "Ollama";
 
-        public async Task<string> GenerateAsync(string prompt)
+        public async Task<string> GenerateAsync(string prompt, string goal = "", string context = "")
         {
             // Implementation
             return await Task.FromResult(string.Empty);

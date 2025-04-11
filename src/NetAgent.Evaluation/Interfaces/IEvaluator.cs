@@ -9,6 +9,6 @@ namespace NetAgent.Evaluation.Interfaces
 {
     public interface IEvaluator
     {
-        Task<EvaluationResult> EvaluateAsync(string prompt, string output, string goal, string context);
+        Task<EvaluationResult> EvaluateAsync(string prompt, string response, string goal, string context);
     }
 }

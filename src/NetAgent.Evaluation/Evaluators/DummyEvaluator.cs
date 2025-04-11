@@ -15,7 +15,7 @@ namespace NetAgent.Evaluation.Evaluators
             return Task.FromResult(new EvaluationResult
             {
                 Score = 1.0,
-                Summary = "Dummy always returns perfect score."
+                Feedback = "Dummy always returns perfect score."
             });
         }
     }

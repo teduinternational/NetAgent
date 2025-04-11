@@ -1,7 +1,6 @@
 ﻿using NetAgent.Abstractions.LLM;
 using NetAgent.Evaluation.Interfaces;
 using NetAgent.Evaluation.Models;
-using System.Threading.Tasks;
 
 namespace NetAgent.Evaluation.Evaluators
 {
@@ -23,7 +22,7 @@ namespace NetAgent.Evaluation.Evaluators
             return new EvaluationResult 
             { 
                 Score = 1.0, // Default perfect score
-                Summary = evaluation
+                Feedback = evaluation
             };
         }
     }

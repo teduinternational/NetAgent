@@ -2,13 +2,11 @@
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\NetAgent.Core\NetAgent.Core.csproj" />
-    <ProjectReference Include="..\NetAgent.LLM\NetAgent.LLM.csproj" />
+    <PackageReference Include="OpenAI" Version="1.7.2" />
+    <ProjectReference Include="..\NetAgent.Abstractions\NetAgent.Abstractions.csproj" />
   </ItemGroup>
 
 </Project>

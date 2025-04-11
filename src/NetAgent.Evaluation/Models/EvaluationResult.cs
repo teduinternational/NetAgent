@@ -9,8 +9,7 @@ namespace NetAgent.Evaluation.Models
     public class EvaluationResult
     {
         public double Score { get; set; }
-        public string[] Weaknesses { get; set; } = Array.Empty<string>();
-        public string[] Suggestions { get; set; } = Array.Empty<string>();
-        public string Summary { get; set; } = string.Empty;
+        public Dictionary<string, double> DetailedScores { get; set; } = new();
+        public string Feedback { get; set; } = string.Empty;
     }
 }

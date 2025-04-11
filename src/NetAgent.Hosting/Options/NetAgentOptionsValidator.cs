@@ -50,7 +50,7 @@ namespace NetAgent.Hosting.Options
                     {
                         return ValidateOptionsResult.Fail("Ollama configuration is required when using Ollama provider");
                     }
-                    if (string.IsNullOrEmpty(options.LLM.OpenAI.Endpoint))
+                    if (string.IsNullOrEmpty(options.LLM.Ollama.Host))
                     {
                         return ValidateOptionsResult.Fail("Ollama Endpoint is required");
                     }

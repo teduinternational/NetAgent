@@ -19,7 +19,7 @@ namespace NetAgent.LLM.AzureOpenAI
 
         public string Name => "AzureOpenAI";
 
-        public async Task<string> GenerateAsync(string prompt)
+        public async Task<string> GenerateAsync(string prompt, string goal = "", string context = "")
         {
             var endpoint = $"https://{_options.ResourceName}.openai.azure.com/openai/deployments/{_options.DeploymentName}/chat/completions?api-version={_options.ApiVersion}";
 
