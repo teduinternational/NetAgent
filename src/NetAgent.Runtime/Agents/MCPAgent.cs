@@ -62,7 +62,20 @@ namespace NetAgent.Runtime.Agents
 
             // Bước 3: Lập kế hoạch dựa trên strategy
             var plan = await _planner.PlanNextStepAsync(goal, inputContext);
+            foreach (var step in plan.Steps)
+            {
+                if (!string.IsNullOrWhiteSpace(step.ToolToUse))
+                {
+                    var tool = _tools.FirstOrDefault(t => t.Name == step.ToolToUse);
+                    if (tool != null)
+                    {
+                        var output = await tool.ExecuteAsync(step.Input);
+                        // Lưu từng output vào AgentContext.ToolOutput hoặc log lại từng bước
+                    }
+                }
 
+                if (step.IsFinalStep) break;
+            }
             // Bước 4: Dùng tool nếu strategy yêu cầu
             string toolOutput = string.Empty;
             if (!decision.SkipToolExecution && decision.ToolToUse is not null)
@@ -70,7 +83,7 @@ namespace NetAgent.Runtime.Agents
                 var selectedTool = _tools.FirstOrDefault(t => t.Name == decision.ToolToUse);
                 if (selectedTool is not null)
                 {
-                    toolOutput = await selectedTool.ExecuteAsync(decision.Plan ?? plan);
+                    toolOutput = await selectedTool.ExecuteAsync(decision.Plan);
                 }
             }
 
@@ -78,7 +91,7 @@ namespace NetAgent.Runtime.Agents
             var agentContext = new AgentContext
             {
                 Goal = goal,
-                Plan = plan,
+                Plan = plan.Goal,
                 Context = inputContext.Context,
                 ToolOutput = toolOutput
             };

@@ -9,6 +9,6 @@ namespace NetAgent.Core.Planning
 {
     public interface IAgentPlanner
     {
-        Task<string> PlanNextStepAsync(string goal, AgentInputContext context);
+        Task<Plan> PlanNextStepAsync(string goal, AgentInputContext context);
     }
 }

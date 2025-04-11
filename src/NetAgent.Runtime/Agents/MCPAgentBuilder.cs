@@ -8,13 +8,12 @@ using NetAgent.Evaluation.Interfaces;
 using NetAgent.Optimization.Interfaces;
 using NetAgent.Runtime.PostProcessing;
 using NetAgent.Strategy;
-using NetAgent.Planner.Default;
 using NetAgent.Memory.InMemory;
 using NetAgent.Runtime.Optimization;
 using NetAgent.Optimization.Optimizers;
 using NetAgent.Evaluation.Evaluators;
 using NetAgent.Strategy.Strategies;
-using NetAgent.LLM.Providers;
+using NetAgent.Planner.Default;
 
 namespace NetAgent.Runtime.Agents
 {

@@ -18,7 +18,6 @@
     <ProjectReference Include="..\NetAgent.Core\NetAgent.Core.csproj" />
     <ProjectReference Include="..\NetAgent.LLM.Factory\NetAgent.LLM.Factory.csproj" />
     <ProjectReference Include="..\NetAgent.Memory.InMemory\NetAgent.Memory.InMemory.csproj" />
-    <ProjectReference Include="..\NetAgent.Planner.Default\NetAgent.Planner.Default.csproj" />
     <ProjectReference Include="..\NetAgent.Runtime\NetAgent.Runtime.csproj" />
     <ProjectReference Include="..\NetAgent.Tools.Standard\NetAgent.Tools.Standard.csproj" />
   </ItemGroup>

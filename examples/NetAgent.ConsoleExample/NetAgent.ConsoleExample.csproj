@@ -17,7 +17,6 @@
     <ProjectReference Include="..\..\src\NetAgent.LLM.OpenAI\NetAgent.LLM.OpenAI.csproj" />
     <ProjectReference Include="..\..\src\NetAgent.LLM\NetAgent.LLM.csproj" />
     <ProjectReference Include="..\..\src\NetAgent.Memory.InMemory\NetAgent.Memory.InMemory.csproj" />
-    <ProjectReference Include="..\..\src\NetAgent.Planner.Default\NetAgent.Planner.Default.csproj" />
     <ProjectReference Include="..\..\src\NetAgent.Runtime\NetAgent.Runtime.csproj" />
     <ProjectReference Include="..\..\src\NetAgent.Tools.Standard\NetAgent.Tools.Standard.csproj" />
   </ItemGroup>

@@ -12,9 +12,9 @@ using NetAgent.Core.Planning;
 using NetAgent.Core.Contexts;
 using NetAgent.Core.Exceptions;
 using NetAgent.Tools.Standard;
-using NetAgent.Planner.Default.Extensions;
 using NetAgent.Planner.Default;
 using NetAgent.Memory.InMemory;
+using NetAgent.Planner.Extensions;
 
 namespace NetAgent.Hosting.Extensions
 {

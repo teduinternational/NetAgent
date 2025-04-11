@@ -8,8 +8,9 @@ namespace NetAgent.Core.Planning
 {
     public class PlanStep
     {
-        public string Action { get; set; } = string.Empty;
-        public string Tool { get; set; } = string.Empty;
-        public string Reasoning { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty; // Mô tả bước
+        public string ToolToUse { get; set; } = string.Empty;   // Tool nếu có
+        public string Input { get; set; } = string.Empty;       // Input cho tool
+        public bool IsFinalStep { get; set; }                   // Bước cuối?
     }
 }

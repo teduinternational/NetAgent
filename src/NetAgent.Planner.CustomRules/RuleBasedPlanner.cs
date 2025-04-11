@@ -15,17 +15,17 @@ namespace NetAgent.Planner.CustomRules
             _rules = rules?.ToList() ?? GetDefaultRules();
         }
 
-        public Task<string> PlanNextStepAsync(string goal, AgentInputContext context)
+        public Task<Plan> PlanNextStepAsync(string goal, AgentInputContext context)
         {
             foreach (var rule in _rules)
             {
                 if (goal.Contains(rule.Keyword, StringComparison.OrdinalIgnoreCase))
                 {
-                    return Task.FromResult(rule.Action);
+                    return Task.FromResult(new Plan { Goal = rule.Action });
                 }
             }
 
-            return Task.FromResult("Default rule-based plan: Try to understand the goal step by step.");
+            return Task.FromResult(new Plan { Goal = "Default rule-based plan: Try to understand the goal step by step." });
         }
 
         private List<Rule> GetDefaultRules() => new()

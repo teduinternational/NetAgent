@@ -4,8 +4,9 @@ using NetAgent.Core.Planning;
 using NetAgent.LLM.AzureOpenAI;
 using NetAgent.LLM.Ollama;
 using NetAgent.LLM.OpenAI;
+using NetAgent.Planner.Default;
 
-namespace NetAgent.Planner.Default.Extensions
+namespace NetAgent.Planner.Extensions
 {
     public static class ServiceCollectionExtensions
     {
