@@ -9,7 +9,7 @@ namespace NetAgent.Runtime.PostProcessing.Logging
 {
     public class LoggingPostProcessor : IAgentPostProcessor
     {
-        public Task PostProcessAsync(AgentResult result, AgentInputContext context)
+        public Task PostProcessAsync(AgentResponse result, AgentInputContext context)
         {
             Console.WriteLine("✅ Agent Goal: " + context.Goal);
             Console.WriteLine("📤 Output: " + result.Output);

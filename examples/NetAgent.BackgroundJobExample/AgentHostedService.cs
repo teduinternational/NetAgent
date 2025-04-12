@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using NetAgent.Abstractions;
+using NetAgent.Abstractions.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -30,7 +31,10 @@ namespace NetAgent.BackgroundJobExample
 
                 try
                 {
-                    var result = await _agent.ExecuteGoalAsync(goal);
+                    var result = await _agent.ProcessAsync(new AgentRequest()
+                    {
+                         Goal =  goal,
+                    });
                     _logger.LogInformation("✅ Agent result: {Result}", result);
                 }
                 catch (Exception ex)

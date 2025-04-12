@@ -18,7 +18,7 @@ namespace NetAgent.Runtime.Optimization
             _optimizer = optimizer;
         }
 
-        public async Task PostProcessAsync(AgentResult result, AgentInputContext context)
+        public async Task PostProcessAsync(AgentResponse result, AgentInputContext context)
         {
             var optimized = await _optimizer.OptimizeAsync(result.FinalPrompt, context.Goal, context.Context);
 

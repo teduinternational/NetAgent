@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using NetAgent.Abstractions;
+using NetAgent.Abstractions.Models;
 using NetAgent.WebExample.Models;
 
 namespace NetAgent.WebExample.Controllers
@@ -18,7 +19,10 @@ namespace NetAgent.WebExample.Controllers
         [HttpPost("execute")]
         public async Task<IActionResult> Execute([FromBody] GoalRequest request)
         {
-            var result = await _agent.ExecuteGoalAsync(request.Goal);
+            var result = await _agent.ProcessAsync(new AgentRequest()
+            {
+                Goal = request.Goal
+            });
             return Ok(new { Result = result });
         }
     }

@@ -1,6 +1,7 @@
 ﻿using System.Net.Http.Json;
 using System.Text.Json;
 using NetAgent.Abstractions.LLM;
+using NetAgent.Abstractions.Models;
 
 namespace NetAgent.LLM.DeepSeek
 {
@@ -19,21 +20,12 @@ namespace NetAgent.LLM.DeepSeek
 
         public string Name => "DeepSeek";
 
-        public async Task<string> GenerateAsync(string prompt, string goal = "", string context = "")
+        public async Task<LLMResponse> GenerateAsync(Prompt prompt)
         {
-            var messages = new List<object>();
-            
-            if (!string.IsNullOrEmpty(context))
+            var messages = new List<object>()
             {
-                messages.Add(new { role = "system", content = context });
-            }
-            
-            if (!string.IsNullOrEmpty(goal))
-            {
-                messages.Add(new { role = "system", content = goal });
-            }
-
-            messages.Add(new { role = "user", content = prompt });
+                new { role = "user", content = prompt }
+            };
 
             var requestBody = new
             {
@@ -51,7 +43,11 @@ namespace NetAgent.LLM.DeepSeek
                 var result = await response.Content.ReadFromJsonAsync<JsonElement>();
                 var generatedText = result.GetProperty("choices")[0].GetProperty("message").GetProperty("content").GetString();
 
-                return generatedText ?? string.Empty;
+                return new LLMResponse()
+                {
+                    Content = generatedText ?? string.Empty,
+                    TokensUsed = result.GetProperty("usage").GetProperty("total_tokens").GetInt32(),
+                };
             }
             catch (Exception ex)
             {

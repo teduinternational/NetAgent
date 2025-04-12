@@ -1,6 +1,7 @@
 ﻿using System.Net.Http.Headers;
 using System.Text;
 using NetAgent.Abstractions.LLM;
+using NetAgent.Abstractions.Models;
 using Newtonsoft.Json;
 
 namespace NetAgent.LLM.Gemini
@@ -18,7 +19,7 @@ namespace NetAgent.LLM.Gemini
 
         public string Name => "Gemini";
 
-        public async Task<string> GenerateAsync(string prompt, string goal = "", string context = "")
+        public async Task<LLMResponse> GenerateAsync(Prompt prompt)
         {
             var httpClient = new HttpClient();
             httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _options.ApiKey);
@@ -43,7 +44,12 @@ namespace NetAgent.LLM.Gemini
             );
 
             var responseString = await response.Content.ReadAsStringAsync();
-            return responseString;
+            return new LLMResponse()
+            {
+                Content = responseString,
+                ModelName = _options.Model,
+                TokensUsed = 0, // Gemini API does not provide token usage in the response
+            };
         }
     }
 }

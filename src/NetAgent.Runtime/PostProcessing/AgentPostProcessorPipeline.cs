@@ -16,7 +16,7 @@ namespace NetAgent.Runtime.PostProcessing
             _processors = processors;
         }
 
-        public async Task PostProcessAsync(AgentResult result, AgentInputContext context)
+        public async Task PostProcessAsync(AgentResponse result, AgentInputContext context)
         {
             foreach (var processor in _processors)
             {

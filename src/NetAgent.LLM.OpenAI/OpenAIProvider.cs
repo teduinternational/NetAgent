@@ -1,4 +1,5 @@
 ﻿using NetAgent.Abstractions.LLM;
+using NetAgent.Abstractions.Models;
 using OpenAI_API;
 using System;
 using System.Net;
@@ -19,7 +20,7 @@ namespace NetAgent.LLM.OpenAI
         }
 
         public string Name => "OpenAI";
-        public async Task<string> GenerateAsync(string prompt, string goal = "", string context = "")
+        public async Task<LLMResponse> GenerateAsync(Prompt prompt)
         {
             try
             {
@@ -28,10 +29,13 @@ namespace NetAgent.LLM.OpenAI
                 chat.RequestParameters.Temperature = _options.Temperature ?? 0.7;
                 chat.RequestParameters.MaxTokens = _options.MaxTokens ?? 2000;
 
-                chat.AppendUserInput(prompt);
+                chat.AppendUserInput(prompt.Content);
 
                 string response = await chat.GetResponseFromChatbotAsync();
-                return response;
+                return new LLMResponse()
+                {
+                    Content = response,
+                };
             }
             catch (Exception ex)
             {

@@ -1,6 +1,7 @@
 ﻿using NetAgent.Abstractions.LLM;
 using Anthropic.SDK;
 using Anthropic.SDK.Messaging;
+using NetAgent.Abstractions.Models;
 
 namespace NetAgent.LLM.Claude
 {
@@ -17,7 +18,7 @@ namespace NetAgent.LLM.Claude
 
         public string Name => "Claude";
 
-        public async Task<string> GenerateAsync(string prompt, string goal = "", string context = "")
+        public async Task<LLMResponse> GenerateAsync(Prompt prompt)
         {
             try
             {
@@ -28,35 +29,23 @@ namespace NetAgent.LLM.Claude
                     Temperature = _options.Temperature,
                     Messages = new List<Message>
                     {
-                        new Message(RoleType.User,  CombineInputs(prompt,goal,context))
+                        new Message(RoleType.User, prompt.Content)
                     }
                 };
 
                 var response = await _client.Messages.GetClaudeMessageAsync(message);
 
-                return response.Message.ToString();
+                return new LLMResponse()
+                {
+                    Content = response.FirstMessage.ToString(),
+                    ModelName = response.Model,
+                    TokensUsed = response.Usage.OutputTokens,
+                };
             }
             catch (Exception ex)
             {
                 throw new LLMException($"Claude API error: {ex.Message}", ex);
             }
-        }
-
-        private static string CombineInputs(string prompt, string goal, string context)
-        {
-            var combined = prompt;
-
-            if (!string.IsNullOrEmpty(goal))
-            {
-                combined = $"Goal: {goal}\n\n{combined}";
-            }
-
-            if (!string.IsNullOrEmpty(context))
-            {
-                combined = $"Context: {context}\n\n{combined}";
-            }
-
-            return combined;
         }
     }
 }

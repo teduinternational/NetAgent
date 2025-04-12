@@ -66,28 +66,27 @@ namespace NetAgent.Runtime.Agents
         }
 
         public string Name => _options.Name ?? "MCPAgent";
-
-        // Implementation của IAgent.ExecuteGoalAsync
-        Task<string> IAgent.ExecuteGoalAsync(string goal)
+        public async Task<AgentResponse> ProcessAsync(AgentRequest request)
         {
-            return ExecuteGoalAsync(goal, null);
-        }
+            request.InputContext = request.InputContext ?? new AgentInputContext();
 
-        public async Task<string> ExecuteGoalAsync(string goal, AgentContext? context = null)
-        {
-            context ??= new AgentContext();
-            context.Goal = goal;
+            // Tạo AgentContext từ AgentInputContext
+            var agentContext = new AgentContext
+            {
+                Goal = request.InputContext.Goal,
+                Context = request.InputContext.Context
+            };
 
-            var prompt = BuildPrompt(context);
-            var relevantMemories = await _memory.RetrieveAsync(prompt);
+            var prompt = BuildPrompt(agentContext);
+            var relevantMemories = await _memory.RetrieveAsync(prompt.Content);
 
             // Store memories directly in memory store if not null
             if (!string.IsNullOrEmpty(relevantMemories))
             {
-                await _memory.SaveAsync($"goal_{goal}", relevantMemories);
+                await _memory.SaveAsync($"goal_{request.Goal}", relevantMemories);
             }
 
-            string response;
+            LLMResponse response;
             if (_multiLLM != null)
             {
                 var multiLLMWithPreferences = new MultiLLMProvider(
@@ -96,36 +95,31 @@ namespace NetAgent.Runtime.Agents
                     _multiLLM.GetLogger(),
                     _llmPreferences
                 );
-                response = await multiLLMWithPreferences.GenerateAsync(prompt, goal, context.ToString() ?? string.Empty);
+                response = await multiLLMWithPreferences.GenerateAsync(prompt);
             }
             else
             {
-                response = await _llm.GenerateAsync(prompt, goal, context.ToString() ?? string.Empty);
+                response = await _llm.GenerateAsync(prompt);
             }
 
             // Xử lý response bằng cách sử dụng IAgentPostProcessor
-            var result = new AgentResult 
-            { 
-                Output = response,
-                FinalPrompt = prompt 
+            var result = new AgentResponse
+            {
+                Output = response.Content,
+                FinalPrompt = prompt.Content
             };
-            var inputContext = new AgentInputContext 
-            { 
-                Goal = goal,
-                Context = context?.ToString() ?? string.Empty 
-            };
-            await _postProcessor.PostProcessAsync(result, inputContext);
-            
+            await _postProcessor.PostProcessAsync(result, request.InputContext);
+
             // Lưu response đã xử lý vào memory store
             if (!string.IsNullOrEmpty(result.Output))
             {
-                await _memory.SaveAsync($"response_{goal}", result.Output);
+                await _memory.SaveAsync($"response_{request.Goal}", result.Output);
             }
 
-            return result.Output;
+            return result;
         }
 
-        private string BuildPrompt(AgentContext context)
+        private Prompt BuildPrompt(AgentContext context)
         {
             var sb = new StringBuilder();
 
@@ -197,7 +191,10 @@ namespace NetAgent.Runtime.Agents
             }
 
             sb.AppendLine("\nResponse:");
-            return sb.ToString();
+            return new Prompt()
+            {
+                Content = sb.ToString(),
+            };
         }
     }
 }

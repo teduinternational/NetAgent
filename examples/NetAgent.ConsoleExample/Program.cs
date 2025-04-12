@@ -17,7 +17,7 @@ class Program
     static async Task Main(string[] args)
     {
         var builder = Host.CreateApplicationBuilder(args);
-        
+
         // Read configuration from appsettings.json
         builder.Configuration.SetBasePath(Directory.GetCurrentDirectory())
             .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
@@ -28,23 +28,23 @@ class Program
         builder.Services.AddNetAgent(builder.Configuration);
 
         // Add different LLM providers
-        builder.Services.AddSingleton(sp => 
-            LLMProviderFactory.Create(new LLMFactoryOptions 
-            { 
+        builder.Services.AddSingleton(sp =>
+            LLMProviderFactory.Create(new LLMFactoryOptions
+            {
                 Provider = LLMProviderType.OpenAI,
                 OpenAI = new OpenAIOptions { Model = "gpt-4" }
             }));
 
-        builder.Services.AddSingleton(sp => 
-            LLMProviderFactory.Create(new LLMFactoryOptions 
-            { 
+        builder.Services.AddSingleton(sp =>
+            LLMProviderFactory.Create(new LLMFactoryOptions
+            {
                 Provider = LLMProviderType.Claude,
                 Claude = new ClaudeLLMOptions { Model = "claude-3-opus-20240229" }
             }));
 
-        builder.Services.AddSingleton(sp => 
-            LLMProviderFactory.Create(new LLMFactoryOptions 
-            { 
+        builder.Services.AddSingleton(sp =>
+            LLMProviderFactory.Create(new LLMFactoryOptions
+            {
                 Provider = LLMProviderType.DeepSeek,
                 DeepSeek = new DeepSeekOptions { Model = "deepseek-chat" }
             }));
@@ -57,8 +57,8 @@ class Program
         // Create agents using registered MultiLLMProvider
         var agentFactory = serviceProvider.GetRequiredService<IAgentFactory>();
 
-        var developerAgent = await agentFactory.CreateAgent(new AgentOptions 
-        { 
+        var developerAgent = await agentFactory.CreateAgent(new AgentOptions
+        {
             Name = "Developer",
             Role = "You are a senior developer with expertise in Azure and authentication systems. You focus on technical implementation details and best practices.",
             Goals = new[] { "Understand technical requirements", "Identify potential technical challenges", "Suggest implementation approach" },
@@ -74,8 +74,8 @@ class Program
             PreferredProviders = new[] { "Claude" }, // Specify preferred providers for developer agent
         });
 
-        var productOwnerAgent = await agentFactory.CreateAgent(new AgentOptions 
-        { 
+        var productOwnerAgent = await agentFactory.CreateAgent(new AgentOptions
+        {
             Name = "Product Owner",
             Role = "You are a product owner who focuses on business value and user experience. You represent stakeholder interests and ensure requirements are clear.",
             Goals = new[] { "Clarify business requirements", "Define acceptance criteria", "Ensure user value" },
@@ -91,8 +91,8 @@ class Program
             PreferredProviders = new[] { "Claude" }, // Product Owner prefers Claude
         });
 
-        var scrumMasterAgent = await agentFactory.CreateAgent(new AgentOptions 
-        { 
+        var scrumMasterAgent = await agentFactory.CreateAgent(new AgentOptions
+        {
             Name = "Scrum Master",
             Role = "You are a scrum master who facilitates the discussion, ensures clarity, and helps identify blockers and dependencies.",
             Goals = new[] { "Facilitate discussion", "Ensure clear requirements", "Identify blockers and risks" },
@@ -113,29 +113,47 @@ class Program
         discussion.AppendLine("User Story Discussion: Azure SSO Authentication\n");
 
         // PO starts by presenting the story
-        var poResponse = await productOwnerAgent.ExecuteGoalAsync("Present the Azure SSO authentication user story from a business perspective, including the main requirements.");
+        var poResponse = await productOwnerAgent.ProcessAsync(new AgentRequest()
+        {
+            Goal = "Present the user story for Azure SSO authentication, including business value and acceptance criteria.",
+        });
         discussion.AppendLine($"Product Owner: {poResponse}\n");
 
         // Developer asks clarifying technical questions
-        var devResponse = await developerAgent.ExecuteGoalAsync($"Based on the PO's story: {poResponse}\nAsk specific technical questions about the Azure SSO implementation requirements.");
+        var devResponse = await developerAgent.ProcessAsync(new AgentRequest()
+        {
+            Goal = $"Based on the PO's story: {poResponse}\nAsk specific technical questions about the Azure SSO implementation requirements."
+        });
         discussion.AppendLine($"Developer: {devResponse}\n");
 
         // PO responds to technical questions
-        var poFollowup = await productOwnerAgent.ExecuteGoalAsync($"Address the developer's questions: {devResponse}");
+        var poFollowup = await productOwnerAgent.ProcessAsync(new AgentRequest()
+        {
+            Goal = $"Address the developer's questions: {devResponse}"
+        });
         discussion.AppendLine($"Product Owner: {poFollowup}\n");
 
         // Scrum Master facilitates and summarizes
-        var smResponse = await scrumMasterAgent.ExecuteGoalAsync($"Based on the discussion so far:\n{discussion}\nSummarize the key points, identify any gaps or risks, and suggest next steps.");
+        var smResponse = await scrumMasterAgent.ProcessAsync(new AgentRequest()
+        {
+            Goal = $"Based on the discussion so far:\n{discussion}\nSummarize the key points, identify any gaps or risks, and suggest next steps."
+        });
         discussion.AppendLine($"Scrum Master: {smResponse}\n");
 
         // Final technical assessment from developer
-        var devFinal = await developerAgent.ExecuteGoalAsync($"Based on the full discussion:\n{discussion}\nProvide a final technical assessment and confirm if we have enough information to start implementation.");
+        var devFinal = await developerAgent.ProcessAsync(new AgentRequest()
+        {
+            Goal = $"Based on the full discussion:\n{discussion}\nProvide a final technical assessment and confirm if we have enough information to start implementation."
+        });
         discussion.AppendLine($"Developer: {devFinal}\n");
 
         // Final user story compilation by Product Owner for Jira
-        var finalUserStory = await productOwnerAgent.ExecuteGoalAsync($"Based on the complete discussion:\n{discussion}\nCompile a final user story summary for Jira including:\n- Description\n- Acceptance Criteria\n- Technical Considerations from the discussion\n- Dependencies identified\n- Definition of Done");
+        var finalUserStory = await productOwnerAgent.ProcessAsync(new AgentRequest()
+        {
+            Goal = $"Compile the final user story for Jira based on the discussion:\n{discussion}\nEnsure it includes business value, acceptance criteria, and any technical considerations."
+        });
         discussion.AppendLine("\nFinal User Story for Jira:");
-        discussion.AppendLine(finalUserStory);
+        discussion.AppendLine(finalUserStory.Output);
 
         // Print the full discussion
         Console.WriteLine(discussion.ToString());

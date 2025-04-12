@@ -1,9 +1,8 @@
 ﻿using NetAgent.Abstractions.LLM;
+using NetAgent.Abstractions.Models;
 using NetAgent.Optimization.Interfaces;
 using NetAgent.Optimization.Models;
-using System.Threading.Tasks;
 using System.Text.Json;
-using System.Linq;
 
 namespace NetAgent.Optimization.Optimizers
 {
@@ -34,11 +33,14 @@ namespace NetAgent.Optimization.Optimizers
                                             ""suggestions"": [""suggestion 1"", ""suggestion 2"", ...]
                                         }}";
 
-            var response = await _llm.GenerateAsync(optimizationPrompt);
+            var response = await _llm.GenerateAsync(new Prompt()
+            {
+                Content = optimizationPrompt,
+            });
             
             try
             {
-                var result = JsonSerializer.Deserialize<OptimizationResult>(response);
+                var result = JsonSerializer.Deserialize<OptimizationResult>(response.Content);
                 return result ?? new OptimizationResult
                 {
                     OptimizedPrompt = prompt,

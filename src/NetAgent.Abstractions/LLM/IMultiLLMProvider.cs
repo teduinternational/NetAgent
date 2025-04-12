@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Logging;
+using NetAgent.Abstractions.Models;
 
 namespace NetAgent.Abstractions.LLM
 {
@@ -7,12 +8,12 @@ namespace NetAgent.Abstractions.LLM
         /// <summary>
         /// Sinh đầu ra từ tất cả các LLM đang được cấu hình.
         /// </summary>
-        Task<string[]> GenerateFromAllAsync(string prompt);
+        Task<LLMResponse[]> GenerateFromAllAsync(Prompt prompt);
 
         /// <summary>
         /// Sinh kết quả tốt nhất từ các đầu ra theo voting/evaluation.
         /// </summary>
-        Task<string> GenerateBestAsync(string prompt);
+        Task<LLMResponse> GenerateBestAsync(Prompt prompt);
 
         /// <summary>
         /// Lấy danh sách các provider.

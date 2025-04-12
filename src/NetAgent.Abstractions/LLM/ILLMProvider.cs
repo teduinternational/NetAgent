@@ -1,10 +1,10 @@
-using System.Threading.Tasks;
+using NetAgent.Abstractions.Models;
 
 namespace NetAgent.Abstractions.LLM
 {
     public interface ILLMProvider
     {
         string Name { get; }
-        Task<string> GenerateAsync(string prompt, string goal = "", string context = "");
+        Task<LLMResponse> GenerateAsync(Prompt prompt);
     }
 }

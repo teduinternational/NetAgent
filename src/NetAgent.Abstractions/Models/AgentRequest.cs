@@ -12,6 +12,6 @@ namespace NetAgent.Abstractions.Models
     public class AgentRequest
     {
         public string Goal { get; set; } = string.Empty;
-        public Dictionary<string, string>? InputContext { get; set; }
+        public AgentInputContext? InputContext { get; set; }
     }
 }

@@ -1,6 +1,7 @@
 ﻿using System.Collections.Concurrent;
 using Microsoft.Extensions.Logging;
 using NetAgent.Abstractions.LLM;
+using NetAgent.Abstractions.Models;
 
 namespace NetAgent.LLM.Providers
 {
@@ -27,9 +28,9 @@ namespace NetAgent.LLM.Providers
 
         public string Name => "MultiLLM";
 
-        public async Task<string[]> GenerateFromAllAsync(string prompt)
+        public async Task<LLMResponse[]> GenerateFromAllAsync(Prompt prompt)
         {
-            var results = new List<string>();
+            var results = new List<LLMResponse>();
             var orderedProviders = OrderProvidersByPreference(_providers);
 
             foreach (var provider in orderedProviders)
@@ -56,15 +57,15 @@ namespace NetAgent.LLM.Providers
             return results.ToArray();
         }
 
-        public async Task<string> GenerateBestAsync(string prompt)
+        public async Task<LLMResponse> GenerateBestAsync(Prompt prompt)
         {
             var results = await GenerateFromAllAsync(prompt);
             return results
-                .OrderByDescending(r => _scorer.ScoreResponse(r))
-                .FirstOrDefault() ?? string.Empty;
+                .OrderByDescending(r => _scorer.ScoreResponse(r.Content))
+                .FirstOrDefault() ?? new LLMResponse();
         }
 
-        public async Task<string> GenerateAsync(string prompt, string goal = "", string context = "")
+        public async Task<LLMResponse> GenerateAsync(Prompt prompt)
         {
             var orderedProviders = OrderProvidersByPreference(_providers);
 
@@ -75,7 +76,7 @@ namespace NetAgent.LLM.Providers
 
                 try
                 {
-                    var result = await provider.GenerateAsync(prompt, goal, context);
+                    var result = await provider.GenerateAsync(prompt);
                     _failedProviders.TryRemove(provider.Name, out _);
                     return result;
                 }
