@@ -14,7 +14,7 @@
     <ProjectReference Include="..\NetAgent.Core\NetAgent.Core.csproj" />
     <ProjectReference Include="..\NetAgent.LLM.Claude\NetAgent.LLM.Claude.csproj" />
     <ProjectReference Include="..\NetAgent.LLM.DeepSeek\NetAgent.LLM.DeepSeek.csproj" />
-    <ProjectReference Include="..\NetAgent.LLM.Grok\NetAgent.LLM.Grok.csproj" />
+    <ProjectReference Include="..\NetAgent.LLM.Gemini\NetAgent.LLM.Gemini.csproj" />
     <ProjectReference Include="..\NetAgent.LLM.OpenAI\NetAgent.LLM.OpenAI.csproj" />
   </ItemGroup>
 

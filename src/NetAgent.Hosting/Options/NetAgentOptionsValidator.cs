@@ -62,11 +62,11 @@ namespace NetAgent.Hosting.Options
                         break;
 
                     case "grok":
-                        if (options.LLM.Grok == null)
+                        if (options.LLM.Gemini == null)
                         {
                             return ValidateOptionsResult.Fail($"Grok configuration is required when using Grok provider");
                         }
-                        if (string.IsNullOrEmpty(options.LLM.Grok.ApiKey))
+                        if (string.IsNullOrEmpty(options.LLM.Gemini.ApiKey))
                         {
                             return ValidateOptionsResult.Fail("Grok ApiKey is required");
                         }

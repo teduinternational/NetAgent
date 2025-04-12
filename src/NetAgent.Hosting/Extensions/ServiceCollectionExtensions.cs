@@ -183,8 +183,8 @@ namespace NetAgent.Hosting.Extensions
                         break;
 
                     case "grok":
-                        if (options.Grok is not null)
-                            services.AddGrokProvider(options.Grok);
+                        if (options.Gemini is not null)
+                            services.AddGrokProvider(options.Gemini);
                         break;
 
                     default:

@@ -71,7 +71,7 @@ class Program
                 MaxTokens = 4000,
                 RelevanceThreshold = 0.7f
             },
-            PreferredProviders = new[] { "OpenAI", "Claude" }, // Specify preferred providers for developer agent
+            PreferredProviders = new[] { "Claude" }, // Specify preferred providers for developer agent
         });
 
         var productOwnerAgent = await agentFactory.CreateAgent(new AgentOptions 
@@ -105,7 +105,7 @@ class Program
                 MaxTokens = 3000,
                 RelevanceThreshold = 0.75f
             },
-            PreferredProviders = new[] { "DeepSeek", "OpenAI" }, // Scrum Master can use DeepSeek or OpenAI
+            PreferredProviders = new[] { "Claude" }, // Scrum Master can use DeepSeek or OpenAI
         });
 
         // Start the discussion about Azure SSO authentication story

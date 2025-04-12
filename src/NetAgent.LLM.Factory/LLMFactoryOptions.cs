@@ -1,7 +1,7 @@
 ﻿using NetAgent.LLM.OpenAI;
 using NetAgent.LLM.Claude;
 using NetAgent.LLM.DeepSeek;
-using NetAgent.LLM.Grok;
+using NetAgent.LLM.Gemini;
 
 namespace NetAgent.LLM.Factory
 {
@@ -11,6 +11,6 @@ namespace NetAgent.LLM.Factory
         public OpenAIOptions? OpenAI { get; set; }
         public ClaudeLLMOptions? Claude { get; set; }
         public DeepSeekOptions? DeepSeek { get; set; }
-        public GrokOptions? Grok { get; set; }
+        public GeminiOptions? Gemini { get; set; }
     }
 }

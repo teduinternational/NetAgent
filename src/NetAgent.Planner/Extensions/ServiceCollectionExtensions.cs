@@ -3,7 +3,7 @@ using NetAgent.Abstractions.LLM;
 using NetAgent.Core.Planning;
 using NetAgent.LLM.Claude;
 using NetAgent.LLM.DeepSeek;
-using NetAgent.LLM.Grok;
+using NetAgent.LLM.Gemini;
 using NetAgent.LLM.OpenAI;
 using NetAgent.Planner.Default;
 
@@ -35,9 +35,9 @@ namespace NetAgent.Planner.Extensions
             return services;
         }
 
-        public static IServiceCollection AddGrokProvider(this IServiceCollection services, GrokOptions options)
+        public static IServiceCollection AddGrokProvider(this IServiceCollection services, GeminiOptions options)
         {
-            services.AddSingleton<ILLMProvider>(new GrokLLMProvider(options));
+            services.AddSingleton<ILLMProvider>(new GeminiLLMProvider(options));
             return services;
         }
     }
