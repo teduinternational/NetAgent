@@ -5,6 +5,6 @@
         OpenAI,
         Claude,
         DeepSeek,
-        Grok
+        Gemini
     }
 }

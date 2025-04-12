@@ -183,7 +183,7 @@ namespace NetAgent.Hosting.Extensions
                             services.AddDeepSeekProvider(options.DeepSeek);
                         break;
 
-                    case "grok":
+                    case "gemini":
                         if (options.Gemini is not null)
                             services.AddGeminiProvider(options.Gemini);
                         break;

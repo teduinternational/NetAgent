@@ -61,14 +61,14 @@ namespace NetAgent.Hosting.Options
                         }
                         break;
 
-                    case "grok":
+                    case "gemini":
                         if (options.LLM.Gemini == null)
                         {
-                            return ValidateOptionsResult.Fail($"Grok configuration is required when using Grok provider");
+                            return ValidateOptionsResult.Fail($"Gemini configuration is required when using Grok provider");
                         }
                         if (string.IsNullOrEmpty(options.LLM.Gemini.ApiKey))
                         {
-                            return ValidateOptionsResult.Fail("Grok ApiKey is required");
+                            return ValidateOptionsResult.Fail("Gemini ApiKey is required");
                         }
                         break;
 

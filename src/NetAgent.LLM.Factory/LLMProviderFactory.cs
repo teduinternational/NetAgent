@@ -15,7 +15,7 @@ namespace NetAgent.LLM.Factory
                 LLMProviderType.OpenAI => new OpenAIProvider(options.OpenAI!),
                 LLMProviderType.Claude => new ClaudeLLMProvider(options.Claude!),
                 LLMProviderType.DeepSeek => new DeepSeekLLMProvider(options.DeepSeek!),
-                LLMProviderType.Grok => new GeminiLLMProvider(options.Gemini!),
+                LLMProviderType.Gemini => new GeminiLLMProvider(options.Gemini!),
                 _ => throw new NotSupportedException($"Unknown LLM Provider: {options.Provider}")
             };
         }
