@@ -20,18 +20,39 @@ namespace NetAgent.LLM.Providers
 
         public async Task<LLMResponse[]> GenerateFromAllAsync(Prompt prompt)
         {
-            var result = await _llm.GenerateAsync(prompt);
-            return new[] { result };
+            try 
+            {
+                var result = await _llm.GenerateAsync(prompt);
+                return new[] { result };
+            }
+            catch (TaskCanceledException)
+            {
+                throw new OperationCanceledException();
+            }
         }
 
         public async Task<LLMResponse> GenerateBestAsync(Prompt prompt)
         {
-            return await _llm.GenerateAsync(prompt);
+            try 
+            {
+                return await _llm.GenerateAsync(prompt);
+            }
+            catch (TaskCanceledException)
+            {
+                throw new OperationCanceledException();
+            }
         }
 
         public async Task<LLMResponse> GenerateAsync(Prompt prompt)
         {
-            return await _llm.GenerateAsync(prompt);
+            try 
+            {
+                return await _llm.GenerateAsync(prompt);
+            }
+            catch (TaskCanceledException)
+            {
+                throw new OperationCanceledException();
+            }
         }
 
         public IEnumerable<ILLMProvider> GetProviders()
@@ -44,7 +65,7 @@ namespace NetAgent.LLM.Providers
             return new DefaultResponseScorer();
         }
 
-        public ILogger<IMultiLLMProvider> GetLogger()
+        public ILogger<IMultiLLMProvider>? GetLogger()
         {
             return null;
         }

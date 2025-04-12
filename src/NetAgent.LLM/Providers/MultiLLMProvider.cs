@@ -18,12 +18,22 @@ namespace NetAgent.LLM.Providers
             IEnumerable<ILLMProvider> providers,
             IResponseScorer scorer,
             ILogger<IMultiLLMProvider> logger,
-            ILLMPreferences preferences = null)
+            ILLMPreferences? preferences = null)
         {
             _providers = providers ?? throw new ArgumentNullException(nameof(providers));
             _scorer = scorer ?? throw new ArgumentNullException(nameof(scorer));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _preferences = preferences;
+            
+            // If no preferences provided, create a default one that allows all providers
+            _preferences = preferences ?? new DefaultLLMPreferences(); 
+        }
+
+        private class DefaultLLMPreferences : ILLMPreferences
+        {
+            public IEnumerable<string> PreferredProviders => throw new NotImplementedException();
+
+            public bool IsProviderAllowed(string providerName) => true;
+            public double GetProviderWeight(string providerName) => 1.0;
         }
 
         public string Name => "MultiLLM";
@@ -67,13 +77,17 @@ namespace NetAgent.LLM.Providers
 
         public async Task<LLMResponse> GenerateAsync(Prompt prompt)
         {
-            var orderedProviders = OrderProvidersByPreference(_providers);
+            var orderedProviders = OrderProvidersByPreference(_providers).ToList();
+            var availableProviders = orderedProviders.Where(p => IsProviderAvailable(p)).ToList();
 
-            foreach (var provider in orderedProviders)
+            if (!availableProviders.Any())
             {
-                if (!IsProviderAvailable(provider))
-                    continue;
+                _logger.LogWarning("No available providers found, all providers are either disabled or in retry timeout");
+                throw new LLMException("All available LLM providers failed or are temporarily disabled");
+            }
 
+            foreach (var provider in availableProviders)
+            {
                 try
                 {
                     var result = await provider.GenerateAsync(prompt);
@@ -87,6 +101,7 @@ namespace NetAgent.LLM.Providers
                 }
             }
 
+            // If we get here, all providers have failed during execution
             throw new LLMException("All available LLM providers failed or are temporarily disabled");
         }
 
@@ -118,17 +133,32 @@ namespace NetAgent.LLM.Providers
         private bool IsProviderAvailable(ILLMProvider provider)
         {
             if (_preferences?.IsProviderAllowed(provider.Name) == false)
+            {
+                _logger.LogDebug("Provider {Provider} is not allowed by preferences", provider.Name);
                 return false;
+            }
 
-            return !IsProviderTemporarilyDisabled(provider.Name);
+            if (IsProviderTemporarilyDisabled(provider.Name))
+            {
+                _logger.LogDebug("Provider {Provider} is temporarily disabled", provider.Name);
+                return false;
+            }
+
+            return true;
         }
 
         private bool IsProviderTemporarilyDisabled(string providerName)
         {
             if (_failedProviders.TryGetValue(providerName, out var failedTime))
             {
-                if (DateTime.UtcNow - failedTime < TimeSpan.FromMinutes(RETRY_MINUTES))
+                var timeSinceFailure = DateTime.UtcNow - failedTime;
+                if (timeSinceFailure < TimeSpan.FromMinutes(RETRY_MINUTES))
+                {
+                    _logger.LogDebug("Provider {Provider} is temporarily disabled for {RemainingTime} minutes", 
+                        providerName, 
+                        (TimeSpan.FromMinutes(RETRY_MINUTES) - timeSinceFailure).TotalMinutes);
                     return true;
+                }
                 
                 _failedProviders.TryRemove(providerName, out _);
             }
@@ -142,6 +172,7 @@ namespace NetAgent.LLM.Providers
                 DateTime.UtcNow,
                 (_, _) => DateTime.UtcNow
             );
+            _logger.LogWarning("Provider {Provider} marked as failed at {Time}", providerName, DateTime.UtcNow);
         }
     }
 }
