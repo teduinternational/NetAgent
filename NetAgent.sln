@@ -69,6 +69,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Running", "Running", "{7487
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tools", "Tools", "{335B5770-377C-491A-BDC6-DA3D610CCBA0}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NetAgent.Abstractions.Tests", "tests\NetAgent.Abstractions.Tests\NetAgent.Abstractions.Tests.csproj", "{A5F4C29A-D749-4E87-8B62-39E2B250DE56}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -159,6 +161,10 @@ Global
 		{C8EB3F46-1063-D929-6010-2756ECF98088}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C8EB3F46-1063-D929-6010-2756ECF98088}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C8EB3F46-1063-D929-6010-2756ECF98088}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A5F4C29A-D749-4E87-8B62-39E2B250DE56}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A5F4C29A-D749-4E87-8B62-39E2B250DE56}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A5F4C29A-D749-4E87-8B62-39E2B250DE56}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A5F4C29A-D749-4E87-8B62-39E2B250DE56}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -191,6 +197,7 @@ Global
 		{9D79E3E9-D8DB-4D30-86DB-6F1D1765A232} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{74879F3F-8520-45B6-B9BA-90157499F9E0} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{335B5770-377C-491A-BDC6-DA3D610CCBA0} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{A5F4C29A-D749-4E87-8B62-39E2B250DE56} = {A731528C-1E3A-4F2D-8A8E-5378F35BC042}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {7DEE9960-9DA9-456E-A855-B55186FFBFB1}
