@@ -7,7 +7,7 @@ namespace NetAgent.Evaluation.Extensions
 {
     public static class ServiceCollectionExtensions
     {
-        public static IServiceCollection AddEvaluatorFromConfig(this IServiceCollection services, IConfiguration configuration)
+        public static IServiceCollection AddEvaluators(this IServiceCollection services, IConfiguration configuration)
         {
             var evaluatorType = configuration["NetAgent:Evaluator:Type"]?.ToLowerInvariant() ?? "llm";
 

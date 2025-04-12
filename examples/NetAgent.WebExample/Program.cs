@@ -1,12 +1,11 @@
 using NetAgent.Hosting.Extensions;
 using NetAgent.Runtime.Extensions;
-using NetAgent.LLM.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Configuration.AddJsonFile("appsettings.json");
-builder.Services.AddAgentToolsFromConfig(builder.Configuration);
+builder.Services.AddAgentTools(builder.Configuration);
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();

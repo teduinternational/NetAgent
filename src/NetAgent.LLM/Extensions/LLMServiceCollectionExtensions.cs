@@ -8,7 +8,7 @@ namespace NetAgent.LLM.Extensions
 {
     public static class LLMServiceCollectionExtensions
     {
-        public static IServiceCollection AddMultiLLMProvider(this IServiceCollection services)
+        public static IServiceCollection AddMultiLLMProviders(this IServiceCollection services)
         {
             services.AddSingleton<IMultiLLMProvider>(sp =>
             {

@@ -25,31 +25,31 @@ class Program
             .AddEnvironmentVariables();
 
         // Add NetAgent services with configuration
-        builder.Services.AddNetAgentFromConfig(builder.Configuration);
+        builder.Services.AddNetAgent(builder.Configuration);
 
         // Add different LLM providers
-        builder.Services.AddSingleton<ILLMProvider>(sp => 
+        builder.Services.AddSingleton(sp => 
             LLMProviderFactory.Create(new LLMFactoryOptions 
             { 
                 Provider = LLMProviderType.OpenAI,
                 OpenAI = new OpenAIOptions { Model = "gpt-4" }
             }));
 
-        builder.Services.AddSingleton<ILLMProvider>(sp => 
+        builder.Services.AddSingleton(sp => 
             LLMProviderFactory.Create(new LLMFactoryOptions 
             { 
                 Provider = LLMProviderType.Claude,
                 Claude = new ClaudeLLMOptions { Model = "claude-3-opus-20240229" }
             }));
 
-        builder.Services.AddSingleton<ILLMProvider>(sp => 
+        builder.Services.AddSingleton(sp => 
             LLMProviderFactory.Create(new LLMFactoryOptions 
             { 
                 Provider = LLMProviderType.DeepSeek,
                 DeepSeek = new DeepSeekOptions { Model = "deepseek-chat" }
             }));
 
-        builder.Services.AddMultiLLMProvider(); // Add MultiLLMProvider support
+        builder.Services.AddMultiLLMProviders(); // Add MultiLLMProvider support
 
         var host = builder.Build();
         var serviceProvider = host.Services;

@@ -14,8 +14,8 @@ var builder = Host.CreateDefaultBuilder(args)
     .ConfigureServices((context, services) =>
     {
         services.AddPostProcessors(context.Configuration);
-        services.AddMultiLLMProvider();
-        services.AddAgentToolsFromConfig(context.Configuration);
+        services.AddMultiLLMProviders();
+        services.AddAgentTools(context.Configuration);
         services.AddHostedService<AgentHostedService>();
     });
 

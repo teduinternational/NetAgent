@@ -11,19 +11,20 @@ using NetAgent.Core.Memory;
 using NetAgent.Core.Planning;
 using NetAgent.Core.Contexts;
 using NetAgent.Core.Exceptions;
-using NetAgent.Tools.Standard;
 using NetAgent.Planner.Default;
 using NetAgent.Memory.InMemory;
-using NetAgent.Planner.Extensions;
 using NetAgent.Runtime.PostProcessing;
 using NetAgent.Strategy;
 using NetAgent.Evaluation.Interfaces;
 using NetAgent.Optimization.Interfaces;
 using NetAgent.LLM.Extensions;
-using NetAgent.Evaluation.Evaluators;
-using NetAgent.LLM.Scoring;
 using NetAgent.Runtime.Extensions;
 using NetAgent.Strategy.Extensions;
+using NetAgent.Tools.Standard.TavilySearch;
+using NetAgent.LLM.OpenAI.Extensions;
+using NetAgent.LLM.Claude.Extensions;
+using NetAgent.LLM.DeepSeek.Extensions;
+using NetAgent.LLM.Gemini.Extensions;
 
 namespace NetAgent.Hosting.Extensions
 {
@@ -39,7 +40,7 @@ namespace NetAgent.Hosting.Extensions
         private const string CONFIG_MEMORY_KEY = "NetAgent:Memory:Type";
         private const string CONFIG_CONTEXT_KEY = "NetAgent:Context:Type";
 
-        public static IServiceCollection AddNetAgentFromConfig(
+        public static IServiceCollection AddNetAgent(
             this IServiceCollection services,
             IConfiguration configuration)
         {
@@ -83,11 +84,11 @@ namespace NetAgent.Hosting.Extensions
         {
             logger?.LogInformation("Registering providers...");
 
-            services.AddLLMProvidersFromConfig(configuration);
-            services.AddMemoryProviderFromConfig(configuration);
-            services.AddPlannerFromConfig(configuration);
-            services.AddContextSourceFromConfig(configuration);
-            services.AddMultiLLMProvider();
+            services.AddLLMProviders(configuration);
+            services.AddMemoryProviders(configuration);
+            services.AddPlanners(configuration);
+            services.AddContextSource(configuration);
+            services.AddMultiLLMProviders();
             services.AddPostProcessors(configuration);
             services.AddDefaultStrategy();
             logger?.LogInformation("Providers registered successfully");
@@ -100,7 +101,7 @@ namespace NetAgent.Hosting.Extensions
         {
             logger?.LogInformation("Registering agent tools...");
 
-            services.AddAgentToolsFromConfig(configuration);
+            services.AddAgentTools(configuration);
 
             logger?.LogInformation("Agent tools registered successfully");
         }
@@ -156,7 +157,7 @@ namespace NetAgent.Hosting.Extensions
             logger?.LogInformation("Agent and factory registered successfully");
         }
 
-        public static IServiceCollection AddLLMProvidersFromConfig(
+        public static IServiceCollection AddLLMProviders(
             this IServiceCollection services,
             IConfiguration configuration)
         {
@@ -184,7 +185,7 @@ namespace NetAgent.Hosting.Extensions
 
                     case "grok":
                         if (options.Gemini is not null)
-                            services.AddGrokProvider(options.Gemini);
+                            services.AddGeminiProvider(options.Gemini);
                         break;
 
                     default:
@@ -195,7 +196,7 @@ namespace NetAgent.Hosting.Extensions
             return services;
         }
 
-        public static IServiceCollection AddPlannerFromConfig(
+        public static IServiceCollection AddPlanners(
             this IServiceCollection services,
             IConfiguration configuration)
         {
@@ -207,7 +208,7 @@ namespace NetAgent.Hosting.Extensions
             };
         }
 
-        public static IServiceCollection AddMemoryProviderFromConfig(
+        public static IServiceCollection AddMemoryProviders(
             this IServiceCollection services,
             IConfiguration configuration)
         {
@@ -219,7 +220,7 @@ namespace NetAgent.Hosting.Extensions
             };
         }
 
-        public static IServiceCollection AddContextSourceFromConfig(
+        public static IServiceCollection AddContextSource(
             this IServiceCollection services,
             IConfiguration configuration)
         {
@@ -231,7 +232,7 @@ namespace NetAgent.Hosting.Extensions
             };
         }
 
-        public static IServiceCollection AddAgentToolsFromConfig(
+        public static IServiceCollection AddAgentTools(
             this IServiceCollection services,
             IConfiguration configuration)
         {
@@ -241,11 +242,13 @@ namespace NetAgent.Hosting.Extensions
             {
                 switch (name.ToLowerInvariant())
                 {
-                    case "websearch":
-                        services.AddSingleton<IAgentTool, WebSearchTool>();
-                        break;
-                    case "calculator":
-                        services.AddSingleton<IAgentTool, CalculatorTool>();
+                    case "tavilysearch":
+                        services.Configure<TavilySearchOptions>(configuration.GetSection("NetAgent:Tools:TavilySearch"));
+                        services.AddSingleton<IAgentTool>(sp =>
+                        {
+                            var tavilyOptions = sp.GetRequiredService<IOptions<TavilySearchOptions>>().Value;
+                            return new TavilySearchTool(tavilyOptions);
+                        });
                         break;
                     default:
                         throw new InvalidOperationException($"Unknown tool: {name}");

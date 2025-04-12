@@ -7,7 +7,7 @@ namespace NetAgent.Optimization.Extensions
 {
     public static class ServiceCollectionExtensions
     {
-        public static IServiceCollection AddOptimizerFromConfig(this IServiceCollection services, 
+        public static IServiceCollection AddOptimizers(this IServiceCollection services, 
             IConfiguration configuration)
         {
             var type = configuration["NetAgent:Optimizer:Type"]?.ToLowerInvariant() ?? "prompt";

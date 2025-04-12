@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using NetAgent.Abstractions.Tools;
+using NetAgent.Tools.Standard.TavilySearch;
 
 namespace NetAgent.Tools.Standard.Extensions
 {
@@ -7,8 +8,7 @@ namespace NetAgent.Tools.Standard.Extensions
     {
         public static IServiceCollection AddStandardAgentTools(this IServiceCollection services)
         {
-            services.AddSingleton<IAgentTool, WebSearchTool>();
-            services.AddSingleton<IAgentTool, CalculatorTool>();
+            services.AddSingleton<IAgentTool, TavilySearchTool>();
             return services;
         }
     }
