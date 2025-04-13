@@ -8,21 +8,9 @@ namespace NetAgent.Abstractions.Models
     /// </summary>
     public class AgentOptions
     {
-        /// <summary>
-        /// Tên của agent
-        /// </summary>
-        public string? Name { get; set; }
-
-        /// <summary>
-        /// Vai trò của agent
-        /// </summary>
-        public string? Role { get; set; }
-
-        /// <summary>
-        /// Các mục tiêu của agent
-        /// </summary>
-        public string[] Goals { get; set; } = Array.Empty<string>();
-
+        public string Name { get; set; }
+        public string Role { get; set; }
+        public string[] Goals { get; set; }
         /// <summary>
         /// System message cho agent
         /// </summary>
@@ -44,11 +32,6 @@ namespace NetAgent.Abstractions.Models
         public int MaxTokens { get; set; } = 1000;
 
         /// <summary>
-        /// Cấu hình bộ nhớ cho agent
-        /// </summary>
-        public MemoryOptions Memory { get; set; } = new MemoryOptions();
-
-        /// <summary>
         /// Danh sách công cụ được phép sử dụng
         /// </summary>
         public List<string> EnabledTools { get; set; } = new();
@@ -62,6 +45,36 @@ namespace NetAgent.Abstractions.Models
         /// Danh sách các nhà cung cấp ưu tiên
         /// </summary>
         public string[] PreferredProviders { get; set; } = Array.Empty<string>();
+        
+        /// <summary>
+        /// Số bước tối đa trong kế hoạch thực thi
+        /// </summary>
+        public int MaxPlanSteps { get; set; } = 10;
+
+        /// <summary>
+        /// Thời gian timeout cho mỗi operation (giây)
+        /// </summary>
+        public int TimeoutSeconds { get; set; } = 30;
+
+        /// <summary>
+        /// Bật/tắt logging chi tiết
+        /// </summary>
+        public bool VerboseLogging { get; set; }
+
+        /// <summary>
+        /// Cấu hình cho các nhà cung cấp LLM
+        /// </summary>
+        public Dictionary<string, object> ProviderSettings { get; set; } = new();
+
+        /// <summary>
+        /// Cấu hình bộ nhớ cho agent
+        /// </summary>
+        public MemoryOptions Memory { get; set; } = new();
+
+        /// <summary>
+        /// Cấu hình công cụ cho agent
+        /// </summary>
+        public ToolOptions Tools { get; set; } = new();
     }
 
     /// <summary>
@@ -78,5 +91,26 @@ namespace NetAgent.Abstractions.Models
         /// Ngưỡng liên quan để lưu trữ thông tin (0.0 to 1.0)
         /// </summary>
         public float RelevanceThreshold { get; set; } = 0.7f;
+
+        /// <summary>
+        /// Kích thước cửa sổ ngữ cảnh
+        /// </summary>
+        public int ContextWindowSize { get; set; } = 4096;
+    }
+
+    /// <summary>
+    /// Cấu hình công cụ cho agent
+    /// </summary>
+    public class ToolOptions
+    {
+        /// <summary>
+        /// Danh sách công cụ được phép sử dụng
+        /// </summary>
+        public List<string> EnabledTools { get; set; } = new();
+
+        /// <summary>
+        /// Cấu hình cho từng công cụ
+        /// </summary>
+        public Dictionary<string, object> ToolSettings { get; set; } = new();
     }
 }
