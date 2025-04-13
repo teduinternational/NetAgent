@@ -6,13 +6,13 @@ using NetAgent.Core.Contexts;
 using NetAgent.Core.Memory;
 using NetAgent.Core.Planning;
 using NetAgent.Evaluation.Interfaces;
-using NetAgent.Evaluation.Models;
 using NetAgent.Optimization.Interfaces;
 using NetAgent.Runtime.PostProcessing;
 using NetAgent.Strategy;
 using NetAgent.LLM.Preferences;
 using System.Text;
 using NetAgent.LLM.Providers;
+using NetAgent.LLM.Monitoring;
 
 namespace NetAgent.Runtime.Agents
 {
@@ -33,6 +33,7 @@ namespace NetAgent.Runtime.Agents
         private readonly IOptimizer _optimizer;
         private readonly AgentOptions _options;
         private readonly ILLMPreferences? _llmPreferences;
+        private readonly ILLMHealthCheck _healthCheck;
 
         public MCPAgent(
             ILLMProvider llm,
@@ -45,6 +46,7 @@ namespace NetAgent.Runtime.Agents
             IMultiLLMProvider multiLLM,
             IEvaluator evaluator,
             IOptimizer optimizer,
+            ILLMHealthCheck healthCheck,
             AgentOptions options)
         {
             _llm = llm ?? throw new ArgumentNullException(nameof(llm));
@@ -57,6 +59,7 @@ namespace NetAgent.Runtime.Agents
             _multiLLM = multiLLM ?? throw new ArgumentNullException(nameof(multiLLM));
             _evaluator = evaluator ?? throw new ArgumentNullException(nameof(evaluator));
             _optimizer = optimizer ?? throw new ArgumentNullException(nameof(optimizer));
+            _healthCheck = healthCheck ?? throw new ArgumentNullException(nameof(healthCheck));
             _options = options ?? throw new ArgumentNullException(nameof(options));
             
             if (options.PreferredProviders?.Any() == true)
@@ -66,11 +69,35 @@ namespace NetAgent.Runtime.Agents
         }
 
         public string Name => _options.Name ?? "MCPAgent";
+
         public async Task<AgentResponse> ProcessAsync(AgentRequest request)
         {
             request.InputContext = request.InputContext ?? new AgentInputContext();
+            
+            IDictionary<string, HealthCheckResult> healthResults;
+            
+            // Try to get cached health check results first
+            if (!LLMHealthCheckCache.TryGetCachedResults(out healthResults))
+            {
+                // If no cached results, perform health check
+                healthResults = await _healthCheck.CheckAllProvidersAsync();
+                LLMHealthCheckCache.UpdateCache(healthResults);
+            }
 
-            // Tạo AgentContext từ AgentInputContext
+            var healthyProviders = healthResults
+                .Where(r => r.Value.Status == HealthStatus.Healthy)
+                .Select(r => r.Key)
+                .ToList();
+
+            if (!healthyProviders.Any())
+            {
+                throw new Exception("No healthy LLM providers available");
+            }
+
+            // Create new preferences with only healthy providers
+            var healthyPreferences = new LLMPreferences(healthyProviders);
+
+            // Create AgentContext from AgentInputContext
             var agentContext = new AgentContext
             {
                 Goal = request.InputContext.Goal,
@@ -93,16 +120,21 @@ namespace NetAgent.Runtime.Agents
                     _multiLLM.GetProviders(),
                     _multiLLM.GetScorer(),
                     _multiLLM.GetLogger(),
-                    _llmPreferences
+                    healthyPreferences
                 );
                 response = await multiLLMWithPreferences.GenerateAsync(prompt);
             }
             else
             {
+                // Check if single provider is healthy
+                if (!healthyProviders.Contains(_llm.Name))
+                {
+                    throw new Exception($"LLM provider {_llm.Name} is not healthy");
+                }
                 response = await _llm.GenerateAsync(prompt);
             }
 
-            // Xử lý response bằng cách sử dụng IAgentPostProcessor
+            // Process response using IAgentPostProcessor
             var result = new AgentResponse
             {
                 Output = response.Content,
@@ -110,7 +142,7 @@ namespace NetAgent.Runtime.Agents
             };
             await _postProcessor.PostProcessAsync(result, request.InputContext);
 
-            // Lưu response đã xử lý vào memory store
+            // Save processed response to memory store
             if (!string.IsNullOrEmpty(result.Output))
             {
                 await _memory.SaveAsync($"response_{request.Goal}", result.Output);

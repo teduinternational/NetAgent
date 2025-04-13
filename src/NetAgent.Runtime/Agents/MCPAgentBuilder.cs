@@ -16,6 +16,7 @@ using NetAgent.Evaluation.Evaluators;
 using NetAgent.Strategy.Strategies;
 using NetAgent.Planner.Default;
 using NetAgent.LLM.Providers;
+using NetAgent.LLM.Monitoring;
 
 namespace NetAgent.Runtime.Agents
 {
@@ -31,6 +32,7 @@ namespace NetAgent.Runtime.Agents
         private IMultiLLMProvider? _multiLLMProvider;
         private IEvaluator? _evaluator;
         private IOptimizer? _optimizer;
+        private ILLMHealthCheck? _healthCheck;
         private AgentOptions? _options;
 
         public MCPAgentBuilder WithLLM(ILLMProvider llm)
@@ -99,6 +101,12 @@ namespace NetAgent.Runtime.Agents
             return this;
         }
 
+        public MCPAgentBuilder WithHealthCheck(ILLMHealthCheck healthCheck)
+        {
+            _healthCheck = healthCheck;
+            return this;
+        }
+
         public IAgent Build()
         {
             _tools ??= Array.Empty<IAgentTool>();
@@ -113,8 +121,9 @@ namespace NetAgent.Runtime.Agents
                 throw new InvalidOperationException("Either LLM Provider or MultiLLM Provider must be provided.");
             }
 
-            var selectedLLM = _llm ?? _multiLLMProvider ?? 
-                throw new InvalidOperationException("LLM Provider is missing.");
+            // Use the single LLM if provided, otherwise use the multiLLM provider
+            var selectedLLM = _llm ?? (_multiLLMProvider as ILLMProvider) ?? 
+                throw new InvalidOperationException("No valid LLM Provider available.");
             
             // Initialize remaining dependencies with the selected LLM
             _optimizer ??= new PromptOptimizer(selectedLLM);
@@ -124,6 +133,11 @@ namespace NetAgent.Runtime.Agents
 
             // If multiLLM is not provided, create a basic implementation that just wraps the single LLM
             var multiLLM = _multiLLMProvider ?? new SingleLLMWrapper(selectedLLM);
+
+            // Create default health check if not provided
+            _healthCheck ??= new DefaultLLMHealthCheck(
+                new[] { selectedLLM },
+                Microsoft.Extensions.Options.Options.Create(new HealthCheckOptions()));
 
             return new MCPAgent(
                 selectedLLM,
@@ -136,6 +150,7 @@ namespace NetAgent.Runtime.Agents
                 multiLLM,
                 _evaluator,
                 _optimizer,
+                _healthCheck,
                 _options
             );
         }

@@ -11,6 +11,8 @@ using NetAgent.Abstractions.LLM;
 using NetAgent.LLM.OpenAI;
 using NetAgent.LLM.Claude;
 using NetAgent.LLM.DeepSeek;
+using NetAgent.LLM.Monitoring;
+using NetAgent.LLM.RateLimiting;
 
 class Program
 {
@@ -27,32 +29,118 @@ class Program
         // Add NetAgent services with configuration
         builder.Services.AddNetAgent(builder.Configuration);
 
-        // Add different LLM providers
-        builder.Services.AddSingleton(sp =>
-            LLMProviderFactory.Create(new LLMFactoryOptions
+        // Add LLM Caching
+        builder.Services.AddLLMCaching(options =>
+        {
+            options.DefaultExpiration = TimeSpan.FromHours(24); // Cache responses for 24 hours
+            options.MaxCacheSize = 1000; // Store up to 1000 responses
+        });
+
+        // Configure rate limiting with proper DI
+        builder.Services.AddLLMRateLimiting(options =>
+        {
+            options.RequestsPerMinute = 60;
+            options.TokensPerMinute = 100000;
+            options.ConcurrentRequests = 5;
+            options.EnableAdaptiveThrottling = true;
+            options.RetryAfter = TimeSpan.FromSeconds(1);
+        });
+
+        // Configure monitoring
+        builder.Services.Configure<LLMMetricsOptions>(options => 
+        {
+            options.EnableLatencyTracking = true;
+            options.EnableTokenCounting = true;
+            options.EnableErrorTracking = true;
+            options.EnableResponseTracking = true;
+        });
+
+        builder.Services.Configure<HealthCheckOptions>(options =>
+        {
+            options.Timeout = TimeSpan.FromSeconds(10);
+            options.FailureThresholdEnabled = true;
+            options.FailureThreshold = 3;
+            options.FailureWindow = TimeSpan.FromMinutes(5);
+        });
+
+        // Register monitoring services
+        builder.Services.AddSingleton<ILLMMetricsCollector, DefaultLLMMetricsCollector>();
+        builder.Services.AddSingleton<ILLMHealthCheck, DefaultLLMHealthCheck>();
+
+        // Configure LLM providers
+        builder.Services.AddSingleton<ILLMProvider>(sp =>
+        {
+            var factory = LLMProviderFactory.Create(new LLMFactoryOptions
             {
                 Provider = LLMProviderType.OpenAI,
                 OpenAI = new OpenAIOptions { Model = "gpt-4" }
-            }));
+            });
+            
+            var metrics = sp.GetRequiredService<ILLMMetricsCollector>();
+            var monitoredProvider = new MonitoringLLMProviderDecorator(factory, metrics);
+            // Rate limiting will be automatically applied through DI
+            return monitoredProvider;
+        });
 
-        builder.Services.AddSingleton(sp =>
-            LLMProviderFactory.Create(new LLMFactoryOptions
+        builder.Services.AddSingleton<ILLMProvider>(sp =>
+        {
+            var factory = LLMProviderFactory.Create(new LLMFactoryOptions
             {
                 Provider = LLMProviderType.Claude,
                 Claude = new ClaudeLLMOptions { Model = "claude-3-opus-20240229" }
-            }));
+            });
+            
+            var metrics = sp.GetRequiredService<ILLMMetricsCollector>();
+            var monitoredProvider = new MonitoringLLMProviderDecorator(factory, metrics);
+            // Rate limiting will be automatically applied through DI
+            return monitoredProvider;
+        });
 
-        builder.Services.AddSingleton(sp =>
-            LLMProviderFactory.Create(new LLMFactoryOptions
+        builder.Services.AddSingleton<ILLMProvider>(sp =>
+        {
+            var factory = LLMProviderFactory.Create(new LLMFactoryOptions
             {
                 Provider = LLMProviderType.DeepSeek,
                 DeepSeek = new DeepSeekOptions { Model = "deepseek-chat" }
-            }));
+            });
+            
+            var metrics = sp.GetRequiredService<ILLMMetricsCollector>();
+            var monitoredProvider = new MonitoringLLMProviderDecorator(factory, metrics);
+            // Rate limiting will be automatically applied through DI
+            return monitoredProvider;
+        });
 
         builder.Services.AddMultiLLMProviders(); // Add MultiLLMProvider support
 
         var host = builder.Build();
         var serviceProvider = host.Services;
+
+        // Add health check monitoring
+        var healthCheck = serviceProvider.GetRequiredService<ILLMHealthCheck>();
+        
+        // Run initial health check and cache results
+        var healthResults = await healthCheck.CheckAllProvidersAsync();
+        LLMHealthCheckCache.UpdateCache(healthResults);
+        
+        var hasHealthyProvider = false;
+        foreach (var (provider, result) in healthResults)
+        {
+            Console.WriteLine($"Provider {provider} health status: {result.Status}");
+            if (result.Status != HealthStatus.Healthy)
+            {
+                Console.WriteLine($"Message: {result.Message}");
+            }
+            else
+            {
+                hasHealthyProvider = true;
+            }
+        }
+
+        if (!hasHealthyProvider)
+        {
+            Console.WriteLine("Error: No healthy LLM providers available. Please check your configuration and try again.");
+            return; // Exit if no providers are healthy
+        }
 
         // Create agents using registered MultiLLMProvider
         var agentFactory = serviceProvider.GetRequiredService<IAgentFactory>();
