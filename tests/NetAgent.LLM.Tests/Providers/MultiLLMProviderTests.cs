@@ -197,9 +197,9 @@ namespace NetAgent.LLM.Tests.Providers
             _mockPreferences.Setup(x => x.IsProviderAllowed(It.IsAny<string>())).Returns(true);
 
             // Act - First call will fail
-            await Assert.ThrowsAsync<LLMException>(() => _provider.GenerateAsync(prompt));
+            await Assert.ThrowsAsync<AggregateException>(() => _provider.GenerateAsync(prompt));
 
-            // Assert - Immediate retry should skip both failed providers
+            // Assert - Immediate retry should skip both failed providers and throw LLMException
             await Assert.ThrowsAsync<LLMException>(() => _provider.GenerateAsync(prompt));
             _mockProvider1.Verify(x => x.GenerateAsync(prompt), Times.Once);
             _mockProvider2.Verify(x => x.GenerateAsync(prompt), Times.Once);

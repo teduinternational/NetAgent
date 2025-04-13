@@ -79,6 +79,7 @@ namespace NetAgent.LLM.Providers
         {
             var orderedProviders = OrderProvidersByPreference(_providers).ToList();
             var availableProviders = orderedProviders.Where(p => IsProviderAvailable(p)).ToList();
+            var exceptions = new List<Exception>();
 
             if (!availableProviders.Any())
             {
@@ -94,15 +95,16 @@ namespace NetAgent.LLM.Providers
                     _failedProviders.TryRemove(provider.Name, out _);
                     return result;
                 }
-                catch (LLMException ex)
+                catch (Exception ex)
                 {
                     _logger.LogWarning("Provider {Provider} failed: {Message}", provider.Name, ex.Message);
                     HandleProviderFailure(provider.Name);
+                    exceptions.Add(ex);
                 }
             }
 
             // If we get here, all providers have failed during execution
-            throw new LLMException("All available LLM providers failed or are temporarily disabled");
+            throw new AggregateException("All available LLM providers failed", exceptions);
         }
 
         public IEnumerable<ILLMProvider> GetProviders()
