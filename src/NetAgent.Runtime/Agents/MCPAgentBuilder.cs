@@ -124,20 +124,20 @@ namespace NetAgent.Runtime.Agents
             // Use the single LLM if provided, otherwise use the multiLLM provider
             var selectedLLM = _llm ?? (_multiLLMProvider as ILLMProvider) ?? 
                 throw new InvalidOperationException("No valid LLM Provider available.");
-            
-            // Initialize remaining dependencies with the selected LLM
-            _optimizer ??= new PromptOptimizer(selectedLLM);
-            _postProcessor ??= new OptimizationPostProcessor(_optimizer);
-            _strategy ??= new GoalDrivenStrategy();
-            _evaluator ??= new LLMEvaluator(selectedLLM);
-
-            // If multiLLM is not provided, create a basic implementation that just wraps the single LLM
-            var multiLLM = _multiLLMProvider ?? new SingleLLMWrapper(selectedLLM);
 
             // Create default health check if not provided
             _healthCheck ??= new DefaultLLMHealthCheck(
                 new[] { selectedLLM },
                 Microsoft.Extensions.Options.Options.Create(new HealthCheckOptions()));
+            
+            // Initialize remaining dependencies with the selected LLM
+            _optimizer ??= new PromptOptimizer(selectedLLM, _healthCheck);
+            _postProcessor ??= new OptimizationPostProcessor(_optimizer);
+            _strategy ??= new GoalDrivenStrategy();
+            _evaluator ??= new DefaultEvaluator(selectedLLM);
+
+            // If multiLLM is not provided, create a basic implementation that just wraps the single LLM
+            var multiLLM = _multiLLMProvider ?? new SingleLLMWrapper(selectedLLM);
 
             return new MCPAgent(
                 selectedLLM,

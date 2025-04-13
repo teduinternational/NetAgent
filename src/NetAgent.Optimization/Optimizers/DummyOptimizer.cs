@@ -10,6 +10,11 @@ namespace NetAgent.Optimization.Optimizers
 {
     public class DummyOptimizer : IOptimizer
     {
+        public Task<bool> IsHealthyAsync()
+        {
+            return Task.FromResult(true);
+        }
+
         public Task<OptimizationResult> OptimizeAsync(string prompt, string goal, string context)
         {
             return Task.FromResult(new OptimizationResult

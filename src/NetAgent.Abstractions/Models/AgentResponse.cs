@@ -11,5 +11,8 @@ namespace NetAgent.Abstractions.Models
         public List<ToolResult> ToolTrace { get; set; } = new();
         public string? FinalPrompt { get; set; }
         public bool ContinueIteration { get; set; }
+        public double EvaluationScore { get; set; }
+        public string? Plan { get; set; }
+        public string? Decision { get; set; }
     }
 }

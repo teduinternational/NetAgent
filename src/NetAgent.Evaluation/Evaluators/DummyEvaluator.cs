@@ -1,10 +1,5 @@
 ﻿using NetAgent.Evaluation.Interfaces;
 using NetAgent.Evaluation.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace NetAgent.Evaluation.Evaluators
 {
@@ -15,8 +10,14 @@ namespace NetAgent.Evaluation.Evaluators
             return Task.FromResult(new EvaluationResult
             {
                 Score = 1.0,
+                IsAcceptable = true,
                 Feedback = "Dummy always returns perfect score."
             });
+        }
+
+        public Task<bool> IsHealthyAsync()
+        {
+            return Task.FromResult(true);
         }
     }
 }

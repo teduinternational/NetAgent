@@ -120,7 +120,6 @@ class Program
         
         // Run initial health check and cache results
         var healthResults = await healthCheck.CheckAllProvidersAsync();
-        LLMHealthCheckCache.UpdateCache(healthResults);
         
         var hasHealthyProvider = false;
         foreach (var (provider, result) in healthResults)

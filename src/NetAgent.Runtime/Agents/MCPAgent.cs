@@ -74,15 +74,8 @@ namespace NetAgent.Runtime.Agents
         {
             request.InputContext = request.InputContext ?? new AgentInputContext();
             
-            IDictionary<string, HealthCheckResult> healthResults;
-            
-            // Try to get cached health check results first
-            if (!LLMHealthCheckCache.TryGetCachedResults(out healthResults))
-            {
-                // If no cached results, perform health check
-                healthResults = await _healthCheck.CheckAllProvidersAsync();
-                LLMHealthCheckCache.UpdateCache(healthResults);
-            }
+            // Health check logic
+            var healthResults = await _healthCheck.CheckAllProvidersAsync();
 
             var healthyProviders = healthResults
                 .Where(r => r.Value.Status == HealthStatus.Healthy)
@@ -94,25 +87,43 @@ namespace NetAgent.Runtime.Agents
                 throw new Exception("No healthy LLM providers available");
             }
 
-            // Create new preferences with only healthy providers
-            var healthyPreferences = new LLMPreferences(healthyProviders);
+            // Get additional context from context source
+            var additionalContext = await _contextSource.GetContextAsync();
+            request.InputContext.Context += "\n" + additionalContext.Context;
 
-            // Create AgentContext from AgentInputContext
+            // Plan next steps using planner
+            var plan = await _planner.PlanNextStepAsync(request.InputContext.Goal, request.InputContext);
+
+            // Get strategy decision
+            var decision = await _strategy.DecideNextStepAsync(request.InputContext.Goal, request.InputContext);
+
+            // Create agent context
             var agentContext = new AgentContext
             {
                 Goal = request.InputContext.Goal,
-                Context = request.InputContext.Context
+                Context = request.InputContext.Context,
+                Plan = plan.ToString(),
+                ToolOutput = decision.ToString()
             };
 
             var prompt = BuildPrompt(agentContext);
-            var relevantMemories = await _memory.RetrieveAsync(prompt.Content);
 
-            // Store memories directly in memory store if not null
+            // Optimize the prompt
+            var optimizationResult = await _optimizer.OptimizeAsync(prompt.Content, request.InputContext.Goal, request.InputContext.Context);
+            prompt = new Prompt { Content = optimizationResult.OptimizedPrompt };
+
+            // Get relevant memories
+            var relevantMemories = await _memory.RetrieveAsync(prompt.Content);
             if (!string.IsNullOrEmpty(relevantMemories))
             {
-                await _memory.SaveAsync($"goal_{request.Goal}", relevantMemories);
+                await _memory.SaveAsync($"goal_{request.InputContext.Goal}", relevantMemories);
+                prompt.Content += "\nRelevant Context:\n" + relevantMemories;
             }
 
+            // Create healthy preferences
+            var healthyPreferences = new LLMPreferences(healthyProviders);
+
+            // Generate response using LLM
             LLMResponse response;
             if (_multiLLM != null)
             {
@@ -126,7 +137,6 @@ namespace NetAgent.Runtime.Agents
             }
             else
             {
-                // Check if single provider is healthy
                 if (!healthyProviders.Contains(_llm.Name))
                 {
                     throw new Exception($"LLM provider {_llm.Name} is not healthy");
@@ -134,18 +144,31 @@ namespace NetAgent.Runtime.Agents
                 response = await _llm.GenerateAsync(prompt);
             }
 
-            // Process response using IAgentPostProcessor
+            // Evaluate response
+            var evaluationResult = await _evaluator.EvaluateAsync(prompt.Content, response.Content, request.InputContext.Goal, request.InputContext.Context);
+            if (!evaluationResult.IsAcceptable)
+            {
+                // If evaluation fails, try to regenerate with feedback
+                prompt.Content += "\nPrevious response was not acceptable. Please improve based on this feedback: " + evaluationResult.Feedback;
+                response = await _llm.GenerateAsync(prompt);
+            }
+
+            // Create and process response
             var result = new AgentResponse
             {
                 Output = response.Content,
-                FinalPrompt = prompt.Content
+                FinalPrompt = prompt.Content,
+                EvaluationScore = evaluationResult.Score,
+                Plan = plan.ToString(),
+                Decision = decision.ToString()
             };
+
             await _postProcessor.PostProcessAsync(result, request.InputContext);
 
-            // Save processed response to memory store
+            // Save to memory
             if (!string.IsNullOrEmpty(result.Output))
             {
-                await _memory.SaveAsync($"response_{request.Goal}", result.Output);
+                await _memory.SaveAsync($"response_{request.InputContext.Goal}", result.Output);
             }
 
             return result;

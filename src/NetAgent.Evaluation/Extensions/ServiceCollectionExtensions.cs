@@ -13,7 +13,7 @@ namespace NetAgent.Evaluation.Extensions
 
             return evaluatorType switch
             {
-                "llm" => services.AddSingleton<IEvaluator, LLMEvaluator>(),
+                "llm" => services.AddSingleton<IEvaluator, DefaultEvaluator>(),
                 "dummy" => services.AddSingleton<IEvaluator, DummyEvaluator>(),
                 _ => throw new InvalidOperationException($"Unknown evaluator type: {evaluatorType}")
             };

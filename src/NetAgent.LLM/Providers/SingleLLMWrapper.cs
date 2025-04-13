@@ -9,21 +9,21 @@ namespace NetAgent.LLM.Providers
 {
     public class SingleLLMWrapper : IMultiLLMProvider
     {
-        private readonly ILLMProvider _llm;
+        private readonly ILLMProvider _provider;
 
-        public SingleLLMWrapper(ILLMProvider llm)
+        public SingleLLMWrapper(ILLMProvider provider)
         {
-            _llm = llm;
+            _provider = provider;
         }
 
-        public string Name => _llm.Name;
+        public string Name => _provider.Name;
 
         public async Task<LLMResponse[]> GenerateFromAllAsync(Prompt prompt)
         {
-            try 
+            try
             {
-                var result = await _llm.GenerateAsync(prompt);
-                return new[] { result };
+                var response = await _provider.GenerateAsync(prompt);
+                return new[] { response };
             }
             catch (TaskCanceledException)
             {
@@ -33,9 +33,9 @@ namespace NetAgent.LLM.Providers
 
         public async Task<LLMResponse> GenerateBestAsync(Prompt prompt)
         {
-            try 
+            try
             {
-                return await _llm.GenerateAsync(prompt);
+                return await _provider.GenerateAsync(prompt);
             }
             catch (TaskCanceledException)
             {
@@ -45,9 +45,9 @@ namespace NetAgent.LLM.Providers
 
         public async Task<LLMResponse> GenerateAsync(Prompt prompt)
         {
-            try 
+            try
             {
-                return await _llm.GenerateAsync(prompt);
+                return await _provider.GenerateAsync(prompt);
             }
             catch (TaskCanceledException)
             {
@@ -57,7 +57,7 @@ namespace NetAgent.LLM.Providers
 
         public IEnumerable<ILLMProvider> GetProviders()
         {
-            return new[] { _llm };
+            return new[] { _provider };
         }
 
         public IResponseScorer GetScorer()
@@ -65,9 +65,9 @@ namespace NetAgent.LLM.Providers
             return new DefaultResponseScorer();
         }
 
-        public ILogger<IMultiLLMProvider>? GetLogger()
+        public ILogger<IMultiLLMProvider> GetLogger()
         {
-            return null;
+            throw new NotImplementedException("Logging is not supported in SingleLLMWrapper");
         }
     }
 }

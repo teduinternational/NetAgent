@@ -47,7 +47,7 @@ namespace NetAgent.Runtime.Extensions
 
             // Register option itself for reuse
             services.Configure<NetAgentPostProcessorOptions>(config.GetSection("NetAgent:PostProcessors"));
-            services.AddSingleton<IEvaluator, LLMEvaluator>();
+            services.AddSingleton<IEvaluator, DefaultEvaluator>();
             services.AddSingleton<IOptimizer, PromptOptimizer>();
 
             return services;

@@ -2,6 +2,7 @@
 using NetAgent.Abstractions.Models;
 using NetAgent.Optimization.Interfaces;
 using NetAgent.Optimization.Models;
+using NetAgent.LLM.Monitoring;
 using System.Text.Json;
 
 namespace NetAgent.Optimization.Optimizers
@@ -9,10 +10,18 @@ namespace NetAgent.Optimization.Optimizers
     public class PromptOptimizer : IOptimizer
     {
         private readonly ILLMProvider _llm;
+        private readonly ILLMHealthCheck _healthCheck;
 
-        public PromptOptimizer(ILLMProvider llm)
+        public PromptOptimizer(ILLMProvider llm, ILLMHealthCheck healthCheck)
         {
             _llm = llm;
+            _healthCheck = healthCheck;
+        }
+
+        public async Task<bool> IsHealthyAsync()
+        {
+            var healthResult = await _healthCheck.CheckHealthAsync(_llm.Name);
+            return healthResult.Status == HealthStatus.Healthy;
         }
 
         public async Task<OptimizationResult> OptimizeAsync(string prompt, string goal, string context)
