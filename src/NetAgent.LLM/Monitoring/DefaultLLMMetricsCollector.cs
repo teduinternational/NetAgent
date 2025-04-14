@@ -12,6 +12,7 @@ namespace NetAgent.LLM.Monitoring
         private readonly Counter<long> _responseCounter;
         private readonly Histogram<double> _latencyHistogram;
         private readonly Counter<long> _tokenCounter;
+        private readonly Counter<long> _healthCounter;
 
         public DefaultLLMMetricsCollector(IOptions<LLMMetricsOptions> options)
         {
@@ -35,6 +36,10 @@ namespace NetAgent.LLM.Monitoring
             _tokenCounter = _meter.CreateCounter<long>(
                 MetricsConstants.TokensMetricName,
                 description: "Number of tokens used");
+
+            _healthCounter = _meter.CreateCounter<long>(
+                MetricsConstants.HealthMetricName,
+                description: "Health status of LLM providers");
         }
 
         public void RecordLatency(string provider, double milliseconds)
@@ -74,6 +79,19 @@ namespace NetAgent.LLM.Monitoring
             {
                 var tag = new KeyValuePair<string, object?>("provider", provider);
                 _responseCounter.Add(1, tag);
+            }
+        }
+
+        public void RecordHealth(string provider, bool isHealthy)
+        {
+            if (_options.EnableHealthTracking)
+            {
+                var tags = new[]
+                {
+                    new KeyValuePair<string, object?>("provider", provider),
+                    new KeyValuePair<string, object?>("status", isHealthy ? "healthy" : "unhealthy")
+                };
+                _healthCounter.Add(1, tags);
             }
         }
     }

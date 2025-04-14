@@ -9,6 +9,7 @@ namespace NetAgent.LLM.Monitoring
         void RecordTokens(string provider, int tokens);
         void RecordError(string provider, string errorType);
         void RecordResponse(string provider, LLMResponse response);
+        void RecordHealth(string provider, bool isHealthy);
     }
 
     public class LLMMetricsOptions
@@ -17,6 +18,7 @@ namespace NetAgent.LLM.Monitoring
         public bool EnableTokenCounting { get; set; } = true;
         public bool EnableErrorTracking { get; set; } = true;
         public bool EnableResponseTracking { get; set; } = true;
+        public bool EnableHealthTracking { get; set; } = true;
     }
 
     public class MetricsConstants
@@ -26,5 +28,6 @@ namespace NetAgent.LLM.Monitoring
         public const string TokensMetricName = "llm_tokens_used";
         public const string ErrorsMetricName = "llm_errors_total";
         public const string ResponsesMetricName = "llm_responses_total";
+        public const string HealthMetricName = "llm_health_status";
     }
 }

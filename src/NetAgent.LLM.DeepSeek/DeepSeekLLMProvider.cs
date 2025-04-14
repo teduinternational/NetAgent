@@ -54,5 +54,18 @@ namespace NetAgent.LLM.DeepSeek
                 throw new Exception($"Failed to generate response from DeepSeek API: {ex.Message}", ex);
             }
         }
+
+        public async Task<bool> IsHealthyAsync()
+        {
+            try
+            {
+                var response = await _httpClient.GetAsync("https://api.deepseek.com/v1/models");
+                return response.IsSuccessStatusCode;
+            }
+            catch
+            {
+                return false;
+            }
+        }
     }
 }

@@ -21,6 +21,11 @@ namespace NetAgent.LLM.Monitoring
 
         public async Task<LLMResponse> GenerateAsync(Prompt prompt)
         {
+            if (!await IsHealthyAsync())
+            {
+                throw new LLMException($"Provider {Name} is not healthy");
+            }
+
             var stopwatch = Stopwatch.StartNew();
             try
             {
@@ -46,6 +51,21 @@ namespace NetAgent.LLM.Monitoring
                 _metrics.RecordLatency(Name, stopwatch.ElapsedMilliseconds);
                 _metrics.RecordError(Name, ex.GetType().Name);
                 throw;
+            }
+        }
+
+        public async Task<bool> IsHealthyAsync()
+        {
+            try
+            {
+                var isProviderHealthy = await _innerProvider.IsHealthyAsync();
+                _metrics.RecordHealth(Name, isProviderHealthy);
+                return isProviderHealthy;
+            }
+            catch (Exception ex)
+            {
+                _metrics.RecordError(Name, ex.GetType().Name);
+                return false;
             }
         }
     }

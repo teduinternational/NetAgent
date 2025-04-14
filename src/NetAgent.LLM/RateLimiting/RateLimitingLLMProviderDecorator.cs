@@ -20,6 +20,11 @@ namespace NetAgent.LLM.RateLimiting
 
         public async Task<LLMResponse> GenerateAsync(Prompt prompt)
         {
+            if (!await IsHealthyAsync())
+            {
+                throw new LLMException($"Provider {Name} is not healthy");
+            }
+
             try
             {
                 await _rateLimiter.WaitAsync(Name);
@@ -32,6 +37,11 @@ namespace NetAgent.LLM.RateLimiting
                 _rateLimiter.ReportFailure(Name);
                 throw;
             }
+        }
+
+        public async Task<bool> IsHealthyAsync()
+        {
+            return await _innerProvider.IsHealthyAsync();
         }
     }
 }

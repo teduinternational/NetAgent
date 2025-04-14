@@ -45,7 +45,7 @@ namespace NetAgent.LLM.Providers
 
             foreach (var provider in orderedProviders)
             {
-                if (!IsProviderAvailable(provider))
+                if (!await IsProviderAvailableAndHealthyAsync(provider))
                     continue;
 
                 try
@@ -78,13 +78,18 @@ namespace NetAgent.LLM.Providers
         public async Task<LLMResponse> GenerateAsync(Prompt prompt)
         {
             var orderedProviders = OrderProvidersByPreference(_providers).ToList();
-            var availableProviders = orderedProviders.Where(p => IsProviderAvailable(p)).ToList();
+            var availableProviders = (await Task.WhenAll(orderedProviders.Select(async p => 
+                new { Provider = p, IsAvailable = await IsProviderAvailableAndHealthyAsync(p) })))
+                .Where(p => p.IsAvailable)
+                .Select(p => p.Provider)
+                .ToList();
+
             var exceptions = new List<Exception>();
 
             if (!availableProviders.Any())
             {
-                _logger.LogWarning("No available providers found, all providers are either disabled or in retry timeout");
-                throw new LLMException("All available LLM providers failed or are temporarily disabled");
+                _logger.LogWarning("No available healthy providers found");
+                throw new LLMException("All available LLM providers failed, are unhealthy, or are temporarily disabled");
             }
 
             foreach (var provider in availableProviders)
@@ -103,7 +108,6 @@ namespace NetAgent.LLM.Providers
                 }
             }
 
-            // If we get here, all providers have failed during execution
             throw new AggregateException("All available LLM providers failed", exceptions);
         }
 
@@ -175,6 +179,31 @@ namespace NetAgent.LLM.Providers
                 (_, _) => DateTime.UtcNow
             );
             _logger.LogWarning("Provider {Provider} marked as failed at {Time}", providerName, DateTime.UtcNow);
+        }
+
+        private async Task<bool> IsProviderAvailableAndHealthyAsync(ILLMProvider provider)
+        {
+            if (!IsProviderAvailable(provider))
+                return false;
+
+            try
+            {
+                return await provider.IsHealthyAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning("Health check failed for provider {Provider}: {Message}", provider.Name, ex.Message);
+                return false;
+            }
+        }
+
+        public async Task<bool> IsHealthyAsync()
+        {
+            var providers = OrderProvidersByPreference(_providers);
+            var healthyProviders = await Task.WhenAll(
+                providers.Select(async p => await IsProviderAvailableAndHealthyAsync(p)));
+            
+            return healthyProviders.Any(isHealthy => isHealthy);
         }
     }
 }

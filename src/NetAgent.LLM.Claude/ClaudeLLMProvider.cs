@@ -47,5 +47,28 @@ namespace NetAgent.LLM.Claude
                 throw new LLMException($"Claude API error: {ex.Message}", ex);
             }
         }
+
+        public async Task<bool> IsHealthyAsync()
+        {
+            try
+            {
+                var message = new MessageParameters
+                {
+                    Model = _options.Model,
+                    MaxTokens = 1,
+                    Messages = new List<Message>
+                    {
+                        new Message(RoleType.User, "test")
+                    }
+                };
+
+                var response = await _client.Messages.GetClaudeMessageAsync(message);
+                return response != null;
+            }
+            catch
+            {
+                return false;
+            }
+        }
     }
 }

@@ -20,6 +20,11 @@ namespace NetAgent.LLM.Caching
 
         public async Task<LLMResponse> GenerateAsync(Prompt prompt)
         {
+            if (!await IsHealthyAsync())
+            {
+                throw new LLMException($"Provider {Name} is not healthy");
+            }
+
             var cacheKey = GenerateCacheKey(prompt);
             
             // Try to get from cache first
@@ -36,6 +41,26 @@ namespace NetAgent.LLM.Caching
             await _cache.SetAsync(cacheKey, response);
             
             return response;
+        }
+
+        public async Task<bool> IsHealthyAsync()
+        {
+            return await _innerProvider.IsHealthyAsync() && await IsCacheHealthyAsync();
+        }
+
+        private async Task<bool> IsCacheHealthyAsync()
+        {
+            try
+            {
+                var testKey = $"health_check_{Guid.NewGuid()}";
+                await _cache.SetAsync(testKey, new LLMResponse { Content = "health_check" });
+                var result = await _cache.GetAsync(testKey);
+                return result != null;
+            }
+            catch
+            {
+                return false;
+            }
         }
 
         private string GenerateCacheKey(Prompt prompt)

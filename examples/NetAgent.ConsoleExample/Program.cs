@@ -13,6 +13,10 @@ using NetAgent.LLM.Claude;
 using NetAgent.LLM.DeepSeek;
 using NetAgent.LLM.Monitoring;
 using NetAgent.LLM.RateLimiting;
+using NetAgent.LLM.OpenAI.Extensions;
+using NetAgent.LLM.Claude.Extensions;
+using NetAgent.LLM.DeepSeek.Extensions;
+using NetAgent.LLM.Gemini;
 
 class Program
 {
@@ -46,72 +50,47 @@ class Program
             options.RetryAfter = TimeSpan.FromSeconds(1);
         });
 
-        // Configure monitoring
-        builder.Services.Configure<LLMMetricsOptions>(options => 
-        {
-            options.EnableLatencyTracking = true;
-            options.EnableTokenCounting = true;
-            options.EnableErrorTracking = true;
-            options.EnableResponseTracking = true;
-        });
-
-        builder.Services.Configure<HealthCheckOptions>(options =>
-        {
-            options.Timeout = TimeSpan.FromSeconds(10);
-            options.FailureThresholdEnabled = true;
-            options.FailureThreshold = 3;
-            options.FailureWindow = TimeSpan.FromMinutes(5);
-        });
-
-        // Register monitoring services
-        builder.Services.AddSingleton<ILLMMetricsCollector, DefaultLLMMetricsCollector>();
-        builder.Services.AddSingleton<ILLMHealthCheck, DefaultLLMHealthCheck>();
+        // Configure and register health checks and monitoring
+        builder.Services.AddLLMMonitoringSystem(
+            configureHealthChecks: options => 
+            {
+                options.Timeout = TimeSpan.FromSeconds(5);
+                options.FailureThreshold = 3;
+                options.FailureWindow = TimeSpan.FromMinutes(5);
+            },
+            configureMetrics: options => 
+            {
+                options.EnableLatencyTracking = true;
+                options.EnableTokenCounting = true;
+                options.EnableErrorTracking = true;
+                options.EnableResponseTracking = true;
+            }
+        );
 
         // Configure LLM providers
-        builder.Services.AddSingleton<ILLMProvider>(sp =>
+        builder.Services.Configure<OpenAIOptions>(options => 
         {
-            var factory = LLMProviderFactory.Create(new LLMFactoryOptions
-            {
-                Provider = LLMProviderType.OpenAI,
-                OpenAI = new OpenAIOptions { Model = "gpt-4" }
-            });
-            
-            var metrics = sp.GetRequiredService<ILLMMetricsCollector>();
-            var monitoredProvider = new MonitoringLLMProviderDecorator(factory, metrics);
-            // Rate limiting will be automatically applied through DI
-            return monitoredProvider;
+            options.Model = "gpt-4";
         });
 
-        builder.Services.AddSingleton<ILLMProvider>(sp =>
+        builder.Services.Configure<ClaudeLLMOptions>(options =>
         {
-            var factory = LLMProviderFactory.Create(new LLMFactoryOptions
-            {
-                Provider = LLMProviderType.Claude,
-                Claude = new ClaudeLLMOptions { Model = "claude-3-opus-20240229" }
-            });
-            
-            var metrics = sp.GetRequiredService<ILLMMetricsCollector>();
-            var monitoredProvider = new MonitoringLLMProviderDecorator(factory, metrics);
-            // Rate limiting will be automatically applied through DI
-            return monitoredProvider;
+            options.Model = "claude-3-opus-20240229";
         });
 
-        builder.Services.AddSingleton<ILLMProvider>(sp =>
+        builder.Services.Configure<DeepSeekOptions>(options =>
         {
-            var factory = LLMProviderFactory.Create(new LLMFactoryOptions
-            {
-                Provider = LLMProviderType.DeepSeek,
-                DeepSeek = new DeepSeekOptions { Model = "deepseek-chat" }
-            });
-            
-            var metrics = sp.GetRequiredService<ILLMMetricsCollector>();
-            var monitoredProvider = new MonitoringLLMProviderDecorator(factory, metrics);
-            // Rate limiting will be automatically applied through DI
-            return monitoredProvider;
+            options.Model = "deepseek-chat";
+        });
+        builder.Services.Configure<GeminiOptions>(options =>
+        {
+            options.Model = "gemini-1.5-flash";
         });
 
-        builder.Services.AddMultiLLMProviders(); // Add MultiLLMProvider support
-
+        // Add multi-provider support and scan for plugins
+        builder.Services.AddMultiLLMProviders()
+            .ScanAndRegisterLLMPlugins();
+        
         var host = builder.Build();
         var serviceProvider = host.Services;
 

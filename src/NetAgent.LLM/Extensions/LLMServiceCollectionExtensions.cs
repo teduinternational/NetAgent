@@ -2,6 +2,10 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using NetAgent.Abstractions.LLM;
+using NetAgent.LLM.Claude;
+using NetAgent.LLM.DeepSeek;
+using NetAgent.LLM.Gemini;
+using NetAgent.LLM.OpenAI;
 using NetAgent.LLM.Providers;
 using NetAgent.LLM.Scoring;
 using System;
@@ -68,6 +72,47 @@ namespace NetAgent.LLM.Extensions
                 {
                     services.AddSingleton(typeof(ILLMProviderPlugin), pluginType);
                 }
+            }
+
+            return services;
+        }
+
+        public static IServiceCollection RegisterCommonLLMProviders(
+            this IServiceCollection services,
+            Action<OpenAIOptions> openAIConfig = null,
+            Action<ClaudeLLMOptions> claudeConfig = null,
+            Action<GeminiOptions> geminiConfig = null,
+            Action<DeepSeekOptions> deepSeekConfig = null)
+        {
+            // Add base multi-provider support
+            services.AddMultiLLMProviders();
+
+            // Register OpenAI provider if config is provided
+            if (openAIConfig != null)
+            {
+                services.AddLLMProviderPlugin<OpenAIProviderPlugin>();
+                services.Configure(openAIConfig);
+            }
+
+            // Register Claude provider if config is provided
+            if (claudeConfig != null)
+            {
+                services.AddLLMProviderPlugin<ClaudeLLMProviderPlugin>();
+                services.Configure(claudeConfig);
+            }
+
+            // Register Gemini provider if config is provided
+            if (geminiConfig != null)
+            {
+                services.AddLLMProviderPlugin<GeminiLLMProviderPlugin>();
+                services.Configure(geminiConfig);
+            }
+
+            // Register DeepSeek provider if config is provided
+            if (deepSeekConfig != null)
+            {
+                services.AddLLMProviderPlugin<DeepSeekLLMProviderPlugin>();
+                services.Configure(deepSeekConfig);
             }
 
             return services;

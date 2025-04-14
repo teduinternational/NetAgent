@@ -20,6 +20,11 @@ namespace NetAgent.LLM.Providers
 
         public async Task<LLMResponse[]> GenerateFromAllAsync(Prompt prompt)
         {
+            if (!await IsHealthyAsync())
+            {
+                throw new LLMException($"Provider {Name} is not healthy");
+            }
+
             try
             {
                 var response = await _provider.GenerateAsync(prompt);
@@ -33,6 +38,11 @@ namespace NetAgent.LLM.Providers
 
         public async Task<LLMResponse> GenerateBestAsync(Prompt prompt)
         {
+            if (!await IsHealthyAsync())
+            {
+                throw new LLMException($"Provider {Name} is not healthy");
+            }
+
             try
             {
                 return await _provider.GenerateAsync(prompt);
@@ -45,6 +55,11 @@ namespace NetAgent.LLM.Providers
 
         public async Task<LLMResponse> GenerateAsync(Prompt prompt)
         {
+            if (!await IsHealthyAsync())
+            {
+                throw new LLMException($"Provider {Name} is not healthy");
+            }
+
             try
             {
                 return await _provider.GenerateAsync(prompt);
@@ -68,6 +83,18 @@ namespace NetAgent.LLM.Providers
         public ILogger<IMultiLLMProvider> GetLogger()
         {
             throw new NotImplementedException("Logging is not supported in SingleLLMWrapper");
+        }
+
+        public async Task<bool> IsHealthyAsync()
+        {
+            try
+            {
+                return await _provider.IsHealthyAsync();
+            }
+            catch
+            {
+                return false;
+            }
         }
     }
 }

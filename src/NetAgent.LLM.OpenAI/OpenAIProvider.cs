@@ -3,6 +3,7 @@ using NetAgent.Abstractions.Models;
 using OpenAI_API;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace NetAgent.LLM.OpenAI
@@ -30,6 +31,19 @@ namespace NetAgent.LLM.OpenAI
         public IAsyncEnumerable<LLMResponseChunk> GenerateStreamAsync(Prompt prompt)
         {
             throw new NotImplementedException();
+        }
+
+        public async Task<bool> IsHealthyAsync()
+        {
+            try
+            {
+                var models = await _client.Models.GetModelsAsync();
+                return models != null && models.Any();
+            }
+            catch
+            {
+                return false;
+            }
         }
     }
 }

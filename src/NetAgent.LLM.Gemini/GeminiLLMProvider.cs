@@ -51,5 +51,20 @@ namespace NetAgent.LLM.Gemini
                 TokensUsed = 0, // Gemini API does not provide token usage in the response
             };
         }
+
+        public async Task<bool> IsHealthyAsync()
+        {
+            try
+            {
+                var response = await _httpClient.GetAsync(
+                    $"https://generativelanguage.googleapis.com/v1beta/models/{_options.Model}"
+                );
+                return response.IsSuccessStatusCode;
+            }
+            catch
+            {
+                return false;
+            }
+        }
     }
 }
