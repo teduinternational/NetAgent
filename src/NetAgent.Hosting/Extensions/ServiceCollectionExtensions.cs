@@ -25,6 +25,7 @@ using NetAgent.LLM.OpenAI.Extensions;
 using NetAgent.LLM.Claude.Extensions;
 using NetAgent.LLM.DeepSeek.Extensions;
 using NetAgent.LLM.Gemini.Extensions;
+using NetAgent.LLM.Monitoring;
 
 namespace NetAgent.Hosting.Extensions
 {
@@ -116,11 +117,11 @@ namespace NetAgent.Hosting.Extensions
             services.AddSingleton<IAgentFactory, MCPAgentFactory>();
 
             // Register IAgent as transient for multiple instances
-            services.AddTransient<IAgent>(sp =>
+            services.AddTransient(sp =>
             {
                 try
                 {
-                    var llm = sp.GetRequiredService<IMultiLLMProvider>();
+                    var multiLLM = sp.GetRequiredService<IMultiLLMProvider>();
                     var tools = sp.GetServices<IAgentTool>().ToArray();
                     var memory = sp.GetRequiredService<IMemoryStore>();
                     var planner = sp.GetRequiredService<IAgentPlanner>();
@@ -129,14 +130,14 @@ namespace NetAgent.Hosting.Extensions
                     var strategy = sp.GetRequiredService<IAgentStrategy>();
                     var evaluator = sp.GetRequiredService<IEvaluator>();
                     var optimizer = sp.GetRequiredService<IOptimizer>();
-
+                    var healthCheck = sp.GetRequiredService<ILLMHealthCheck>();
                     if (!tools.Any())
                     {
                         throw new ConfigurationException("No agent tools were registered");
                     }
 
                     return new MCPAgentBuilder()
-                        .WithMultiLLM(llm)
+                        .WithMultiLLM(multiLLM)
                         .WithTools(tools)
                         .WithMemory(memory)
                         .WithPlanner(planner)
@@ -145,6 +146,7 @@ namespace NetAgent.Hosting.Extensions
                         .WithStrategy(strategy)
                         .WithEvaluator(evaluator)
                         .WithOptimizer(optimizer)
+                        .WithHealthCheck(healthCheck)
                         .Build();
                 }
                 catch (Exception ex)

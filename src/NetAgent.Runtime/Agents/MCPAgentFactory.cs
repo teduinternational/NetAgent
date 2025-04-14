@@ -10,6 +10,7 @@ using NetAgent.Optimization.Interfaces;
 using NetAgent.Runtime.PostProcessing;
 using NetAgent.Strategy;
 using Microsoft.Extensions.DependencyInjection;
+using NetAgent.LLM.Monitoring;
 
 namespace NetAgent.Runtime.Agents
 {
@@ -33,6 +34,7 @@ namespace NetAgent.Runtime.Agents
             var strategy = _serviceProvider.GetRequiredService<IAgentStrategy>();
             var evaluator = _serviceProvider.GetRequiredService<IEvaluator>();
             var optimizer = _serviceProvider.GetRequiredService<IOptimizer>();
+            var healthCheck = _serviceProvider.GetRequiredService<ILLMHealthCheck>();
 
             return await Task.FromResult(new MCPAgentBuilder()
                 .WithMultiLLM(llm)
@@ -45,6 +47,7 @@ namespace NetAgent.Runtime.Agents
                 .WithEvaluator(evaluator)
                 .WithOptimizer(optimizer)
                 .WithOptions(options)
+                .WithHealthCheck(healthCheck)
                 .Build());
         }
     }

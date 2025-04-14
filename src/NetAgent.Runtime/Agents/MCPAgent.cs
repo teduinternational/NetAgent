@@ -84,7 +84,7 @@ namespace NetAgent.Runtime.Agents
 
             if (!healthyProviders.Any())
             {
-                throw new Exception("No healthy LLM providers available");
+                throw new LLMException("No healthy LLM providers available");
             }
 
             // Get additional context from context source

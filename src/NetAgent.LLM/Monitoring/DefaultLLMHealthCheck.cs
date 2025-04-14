@@ -42,11 +42,11 @@ namespace NetAgent.LLM.Monitoring
             try
             {
                 using var cts = new CancellationTokenSource(_options.Timeout);
-                
+
                 // Send a simple test prompt
-                var response = await llmProvider.GenerateAsync(new Abstractions.Models.Prompt 
-                { 
-                    Content = "Test health check." 
+                var response = await llmProvider.GenerateAsync(new Abstractions.Models.Prompt
+                {
+                    Content = "Test health check."
                 });
 
                 var success = !string.IsNullOrEmpty(response?.Content);
@@ -91,8 +91,10 @@ namespace NetAgent.LLM.Monitoring
             }
 
             // Group providers by name and select the first one in each group to avoid duplicates
-            var uniqueProviders = _providers.GroupBy(p => p.Name).Select(g => g.First());
-            
+            var uniqueProviders = _providers.GroupBy(p => p.Name)
+                .Where(x => !string.IsNullOrEmpty(x.Key))
+                .Select(g => g.First());
+
             var tasks = uniqueProviders.Select(async provider =>
             {
                 var result = await CheckHealthAsync(provider.Name);
@@ -106,12 +108,12 @@ namespace NetAgent.LLM.Monitoring
         private void UpdateHealthHistory(string provider, bool success)
         {
             var history = _healthHistory.GetOrAdd(provider, _ => new Queue<(DateTime, bool)>());
-            
+
             // Add new result
             history.Enqueue((DateTime.UtcNow, success));
-            
+
             // Remove old entries outside the failure window
-            while (history.Count > 0 && 
+            while (history.Count > 0 &&
                    DateTime.UtcNow - history.Peek().time > _options.FailureWindow)
             {
                 history.Dequeue();
@@ -124,8 +126,8 @@ namespace NetAgent.LLM.Monitoring
                 return HealthStatus.Unhealthy;
 
             if (!_options.FailureThresholdEnabled)
-                return history.Any() && history.Last().success 
-                    ? HealthStatus.Healthy 
+                return history.Any() && history.Last().success
+                    ? HealthStatus.Healthy
                     : HealthStatus.Unhealthy;
 
             var recentFailures = history.Count(h => !h.success);
@@ -133,7 +135,7 @@ namespace NetAgent.LLM.Monitoring
                 return HealthStatus.Unhealthy;
             if (recentFailures > 0)
                 return HealthStatus.Degraded;
-            
+
             return HealthStatus.Healthy;
         }
 
