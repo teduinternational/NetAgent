@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Logging;
 using NetAgent.Abstractions.LLM;
 using NetAgent.Abstractions.Models;
+using NetAgent.LLM.Monitoring;
 
 namespace NetAgent.LLM.Providers
 {
@@ -12,28 +13,21 @@ namespace NetAgent.LLM.Providers
         private readonly ILogger<IMultiLLMProvider> _logger;
         private readonly ConcurrentDictionary<string, DateTime> _failedProviders = new();
         private readonly ILLMPreferences _preferences;
+        private readonly ILLMHealthCheck _healthCheck;
         private const int RETRY_MINUTES = 5;
 
         public MultiLLMProvider(
             IEnumerable<ILLMProvider> providers,
             IResponseScorer scorer,
             ILogger<IMultiLLMProvider> logger,
-            ILLMPreferences? preferences = null)
+            ILLMHealthCheck healthCheck,
+            ILLMPreferences preferences)
         {
             _providers = providers ?? throw new ArgumentNullException(nameof(providers));
             _scorer = scorer ?? throw new ArgumentNullException(nameof(scorer));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            
-            // If no preferences provided, create a default one that allows all providers
-            _preferences = preferences ?? new DefaultLLMPreferences(); 
-        }
-
-        private class DefaultLLMPreferences : ILLMPreferences
-        {
-            public IEnumerable<string> PreferredProviders => throw new NotImplementedException();
-
-            public bool IsProviderAllowed(string providerName) => true;
-            public double GetProviderWeight(string providerName) => 1.0;
+            _healthCheck = healthCheck ?? throw new ArgumentNullException(nameof(healthCheck));
+            _preferences = preferences ?? throw new ArgumentNullException(nameof(preferences)); 
         }
 
         public string Name => "MultiLLM";
@@ -188,22 +182,32 @@ namespace NetAgent.LLM.Providers
 
             try
             {
-                return await provider.IsHealthyAsync();
+                var healthResult = await _healthCheck.CheckHealthAsync(provider.Name);
+                if (healthResult.Status == HealthStatus.Unhealthy)
+                {
+                    _logger.LogWarning("Provider {Provider} is unhealthy: {Message}", 
+                        provider.Name, healthResult.Message);
+                    HandleProviderFailure(provider.Name);
+                    return false;
+                }
+                return healthResult.Status == HealthStatus.Healthy;
             }
             catch (Exception ex)
             {
-                _logger.LogWarning("Health check failed for provider {Provider}: {Message}", provider.Name, ex.Message);
+                _logger.LogWarning("Health check failed for provider {Provider}: {Message}", 
+                    provider.Name, ex.Message);
                 return false;
             }
         }
 
         public async Task<bool> IsHealthyAsync()
         {
-            var providers = OrderProvidersByPreference(_providers);
-            var healthyProviders = await Task.WhenAll(
-                providers.Select(async p => await IsProviderAvailableAndHealthyAsync(p)));
+            var healthResults = await _healthCheck.CheckAllProvidersAsync();
+            var orderedProviders = OrderProvidersByPreference(_providers);
             
-            return healthyProviders.Any(isHealthy => isHealthy);
+            return orderedProviders.Any(p => 
+                healthResults.TryGetValue(p.Name, out var result) && 
+                result.Status == HealthStatus.Healthy);
         }
     }
 }

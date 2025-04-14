@@ -1,4 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using NetAgent.Abstractions.LLM;
 using NetAgent.LLM.Factory;
 using System.Reflection;
@@ -52,13 +53,32 @@ namespace NetAgent.LLM.Extensions
                         // Register configuration type if any
                         if (plugin.ConfigurationType != null)
                         {
-                            var configureMethod = typeof(OptionsConfigurationServiceCollectionExtensions)
-                                .GetMethod(nameof(OptionsConfigurationServiceCollectionExtensions.Configure))
+                            // Register the options type with DI
+                            services.AddOptions();
+
+                            // Configure the options
+                            var optionsBuilder = services.AddOptions<object>();
+                            var optionsBuilderType = typeof(OptionsBuilder<>).MakeGenericType(plugin.ConfigurationType);
+                            var configureOptionsMethod = typeof(OptionsBuilderExtensions)
+                                .GetMethods()
+                                .FirstOrDefault(m => m.Name == "Configure" && m.GetParameters().Length == 2)
                                 ?.MakeGenericMethod(plugin.ConfigurationType);
-                            
-                            if (configureMethod != null)
+
+                            if (configureOptionsMethod != null)
                             {
-                                configureMethod.Invoke(null, new object[] { services, (Action<object>)(_ => { }) });
+                                var defaultOptions = Activator.CreateInstance(plugin.ConfigurationType);
+                                configureOptionsMethod.Invoke(null, new object[] 
+                                { 
+                                    optionsBuilder,
+                                    new Action<object>(options => 
+                                    {
+                                        foreach (var prop in plugin.ConfigurationType.GetProperties())
+                                        {
+                                            var defaultValue = prop.GetValue(defaultOptions);
+                                            prop.SetValue(options, defaultValue);
+                                        }
+                                    })
+                                });
                             }
                         }
                     }

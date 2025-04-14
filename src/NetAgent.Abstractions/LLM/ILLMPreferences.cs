@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-
 namespace NetAgent.Abstractions.LLM
 {
     public interface ILLMPreferences

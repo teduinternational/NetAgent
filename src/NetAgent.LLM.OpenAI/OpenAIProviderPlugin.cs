@@ -6,13 +6,13 @@ namespace NetAgent.LLM.OpenAI
 {
     public class OpenAIProviderPlugin : ILLMProviderPlugin
     {
-        public string Name => "OpenAI";
-
+        public string Name => "openai";
+        
         public Type ConfigurationType => typeof(OpenAIOptions);
-
-        public ILLMProvider CreateProvider(IServiceProvider services)
+        
+        public ILLMProvider CreateProvider(IServiceProvider serviceProvider)
         {
-            var options = services.GetRequiredService<OpenAIOptions>();
+            var options = serviceProvider.GetRequiredService<OpenAIOptions>();
             return new OpenAIProvider(options);
         }
     }

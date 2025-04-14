@@ -7,7 +7,12 @@ namespace NetAgent.LLM.OpenAI.Extensions
     {
         public static IServiceCollection AddOpenAIProvider(this IServiceCollection services, OpenAIOptions options)
         {
-            services.AddSingleton<ILLMProvider>(new OpenAIProvider(options));
+            // Register the options
+            services.AddSingleton(options);
+            
+            // Register the plugin
+            services.AddSingleton<ILLMProviderPlugin, OpenAIProviderPlugin>();
+            
             return services;
         }
     }

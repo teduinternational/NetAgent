@@ -7,7 +7,12 @@ namespace NetAgent.LLM.Gemini.Extensions
     {
         public static IServiceCollection AddGeminiProvider(this IServiceCollection services, GeminiOptions options)
         {
-            services.AddSingleton<ILLMProvider>(new GeminiLLMProvider(options));
+            // Register the options
+            services.AddSingleton(options);
+            
+            // Register the plugin
+            services.AddSingleton<ILLMProviderPlugin, GeminiLLMProviderPlugin>();
+            
             return services;
         }
     }

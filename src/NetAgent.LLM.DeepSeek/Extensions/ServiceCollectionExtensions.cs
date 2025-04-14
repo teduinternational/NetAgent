@@ -7,7 +7,12 @@ namespace NetAgent.LLM.DeepSeek.Extensions
     {
         public static IServiceCollection AddDeepSeekProvider(this IServiceCollection services, DeepSeekOptions options)
         {
-            services.AddSingleton<ILLMProvider>(new DeepSeekLLMProvider(options));
+            // Register the options
+            services.AddSingleton(options);
+            
+            // Register the plugin
+            services.AddSingleton<ILLMProviderPlugin, DeepSeekLLMProviderPlugin>();
+            
             return services;
         }
     }

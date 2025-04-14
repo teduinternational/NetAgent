@@ -5,7 +5,9 @@ using NetAgent.Abstractions.LLM;
 using NetAgent.LLM.Claude;
 using NetAgent.LLM.DeepSeek;
 using NetAgent.LLM.Gemini;
+using NetAgent.LLM.Monitoring;
 using NetAgent.LLM.OpenAI;
+using NetAgent.LLM.Preferences;
 using NetAgent.LLM.Providers;
 using NetAgent.LLM.Scoring;
 using System;
@@ -23,7 +25,21 @@ namespace NetAgent.LLM.Extensions
                 var providers = sp.GetServices<ILLMProvider>();
                 var scorer = sp.GetRequiredService<IResponseScorer>();
                 var logger = sp.GetRequiredService<ILogger<MultiLLMProvider>>();
-                return new MultiLLMProvider(providers, scorer, logger);
+                var healthCheck = sp.GetRequiredService<ILLMHealthCheck>();
+                var plugins = sp.GetServices<ILLMProviderPlugin>();
+                var providerNames = new List<string>();
+
+                foreach (var plugin in plugins)
+                {
+                    var provider = plugin.CreateProvider(sp);
+                    if (provider != null)
+                    {
+                        providerNames.Add(provider.Name);
+                    }
+                }
+
+                var preferences = new LLMPreferences(providerNames);
+                return new MultiLLMProvider(providers, scorer, logger, healthCheck, preferences);
             });
             services.AddSingleton<IResponseScorer, DefaultResponseScorer>();
 

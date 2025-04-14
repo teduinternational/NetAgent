@@ -127,6 +127,7 @@ namespace NetAgent.Runtime.Agents
                         _multiLLM.GetProviders(),
                         _multiLLM.GetScorer(),
                         _multiLLM.GetLogger(),
+                        _healthCheck,
                         fallbackPreferences
                     );
 
@@ -156,6 +157,7 @@ namespace NetAgent.Runtime.Agents
                     _multiLLM.GetProviders(),
                     _multiLLM.GetScorer(),
                     _multiLLM.GetLogger(),
+                    _healthCheck,
                     healthyPreferences
                 );
                 response = await multiLLMWithPreferences.GenerateAsync(prompt);
@@ -189,6 +191,7 @@ namespace NetAgent.Runtime.Agents
                         _multiLLM.GetProviders(),
                         _multiLLM.GetScorer(),
                         _multiLLM.GetLogger(),
+                        _healthCheck,
                         fallbackPreferences
                     );
 

@@ -20,7 +20,6 @@ namespace NetAgent.LLM.Extensions
 
             return services;
         }
-
         public static IServiceCollection AddLLMMonitoringSystem(
             this IServiceCollection services,
             Action<HealthCheckOptions> configureHealthChecks = null,
