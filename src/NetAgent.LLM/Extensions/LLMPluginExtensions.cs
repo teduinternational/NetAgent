@@ -49,38 +49,6 @@ namespace NetAgent.LLM.Extensions
                     if (pluginInstance is ILLMProviderPlugin plugin)
                     {
                         factory.RegisterPlugin(plugin);
-
-                        // Register configuration type if any
-                        if (plugin.ConfigurationType != null)
-                        {
-                            // Register the options type with DI
-                            services.AddOptions();
-
-                            // Configure the options
-                            var optionsBuilder = services.AddOptions<object>();
-                            var optionsBuilderType = typeof(OptionsBuilder<>).MakeGenericType(plugin.ConfigurationType);
-                            var configureOptionsMethod = typeof(OptionsBuilderExtensions)
-                                .GetMethods()
-                                .FirstOrDefault(m => m.Name == "Configure" && m.GetParameters().Length == 2)
-                                ?.MakeGenericMethod(plugin.ConfigurationType);
-
-                            if (configureOptionsMethod != null)
-                            {
-                                var defaultOptions = Activator.CreateInstance(plugin.ConfigurationType);
-                                configureOptionsMethod.Invoke(null, new object[] 
-                                { 
-                                    optionsBuilder,
-                                    new Action<object>(options => 
-                                    {
-                                        foreach (var prop in plugin.ConfigurationType.GetProperties())
-                                        {
-                                            var defaultValue = prop.GetValue(defaultOptions);
-                                            prop.SetValue(options, defaultValue);
-                                        }
-                                    })
-                                });
-                            }
-                        }
                     }
                 }
             }

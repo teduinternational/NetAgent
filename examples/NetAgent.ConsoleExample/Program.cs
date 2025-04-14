@@ -6,6 +6,10 @@ using NetAgent.Abstractions.Models;
 using Microsoft.Extensions.Configuration;
 using NetAgent.Abstractions;
 using NetAgent.LLM.Extensions;
+using NetAgent.LLM.Claude;
+using NetAgent.LLM.OpenAI;
+using NetAgent.LLM.Gemini;
+using NetAgent.LLM.DeepSeek;
 
 class Program
 {
@@ -58,6 +62,10 @@ class Program
 
         // Add multi-provider support and scan for plugins
         builder.Services.AddMultiLLMProviders()
+            .Configure<ClaudeLLMOptions>(builder.Configuration.GetSection("NetAgent:LLM:Claude"))
+            .Configure<OpenAIOptions>(builder.Configuration.GetSection("NetAgent:LLM:OpenAI"))
+            .Configure<GeminiOptions>(builder.Configuration.GetSection("NetAgent:LLM:Gemini"))
+            .Configure<DeepSeekOptions>(builder.Configuration.GetSection("NetAgent:LLM:DeepSeek"))
             .ScanAndRegisterLLMPlugins();
         
         var host = builder.Build();
