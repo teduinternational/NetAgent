@@ -174,7 +174,7 @@ namespace NetAgent.Runtime.Agents
             // Evaluate response
             var evaluationResult = await _evaluator.EvaluateAsync(prompt.Content, response.Content, request.InputContext.Goal, request.InputContext.Context);
             
-            if (evaluationResult.IsError)
+           if (evaluationResult.IsError)
             {
                 // Critical error case - try with different provider
                 if (_llm != null && healthyProviders.Contains(_llm.Name))

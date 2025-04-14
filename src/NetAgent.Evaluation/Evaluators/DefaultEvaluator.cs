@@ -44,7 +44,7 @@ namespace NetAgent.Evaluation.Evaluators
 
             var llmResponse = await _llm.GenerateAsync(new Prompt { Content = evaluationPrompt });
 
-            if (!llmResponse.IsError)
+            if (llmResponse.IsError)
             {
                 return new EvaluationResult
                 {
