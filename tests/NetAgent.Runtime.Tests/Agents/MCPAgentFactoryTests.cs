@@ -21,7 +21,7 @@ namespace NetAgent.Runtime.Tests.Agents
         private readonly Mock<IServiceProvider> _mockServiceProvider;
         private readonly Mock<IMultiLLMProvider> _mockMultiLLM;
         private readonly Mock<IAgentTool> _mockTool;
-        private readonly Mock<IMemoryStore> _mockMemory;
+        private readonly Mock<IKeyValueMemoryStore> _mockMemory;
         private readonly Mock<IAgentPlanner> _mockPlanner;
         private readonly Mock<IContextSource> _mockContextSource;
         private readonly Mock<IAgentPostProcessor> _mockPostProcessor;
@@ -34,7 +34,7 @@ namespace NetAgent.Runtime.Tests.Agents
             _mockServiceProvider = new Mock<IServiceProvider>();
             _mockMultiLLM = new Mock<IMultiLLMProvider>();
             _mockTool = new Mock<IAgentTool>();
-            _mockMemory = new Mock<IMemoryStore>();
+            _mockMemory = new Mock<IKeyValueMemoryStore>();
             _mockPlanner = new Mock<IAgentPlanner>();
             _mockContextSource = new Mock<IContextSource>();
             _mockPostProcessor = new Mock<IAgentPostProcessor>();
@@ -47,7 +47,7 @@ namespace NetAgent.Runtime.Tests.Agents
                 .Returns(_mockMultiLLM.Object);
             _mockServiceProvider.Setup(x => x.GetService(typeof(IEnumerable<IAgentTool>)))
                 .Returns(new[] { _mockTool.Object });
-            _mockServiceProvider.Setup(x => x.GetService(typeof(IMemoryStore)))
+            _mockServiceProvider.Setup(x => x.GetService(typeof(IKeyValueMemoryStore)))
                 .Returns(_mockMemory.Object);
             _mockServiceProvider.Setup(x => x.GetService(typeof(IAgentPlanner)))
                 .Returns(_mockPlanner.Object);

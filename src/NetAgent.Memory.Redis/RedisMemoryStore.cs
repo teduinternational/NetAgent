@@ -3,7 +3,7 @@ using StackExchange.Redis;
 
 namespace NetAgent.Memory.Redis
 {
-    public class RedisMemoryStore : IMemoryStore
+    public class RedisMemoryStore : IKeyValueMemoryStore
     {
         private readonly IDatabase _db;
         private const string KeyPrefix = "netagent:memory:";

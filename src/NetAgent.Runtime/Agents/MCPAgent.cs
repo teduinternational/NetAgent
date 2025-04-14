@@ -25,7 +25,8 @@ namespace NetAgent.Runtime.Agents
         private readonly IAgentTool[] _tools;
         private readonly IAgentPlanner _planner;
         private readonly IContextSource _contextSource;
-        private readonly IMemoryStore _memory;
+        private readonly IKeyValueMemoryStore _keyValueMemory;
+        private readonly ISemanticMemoryStore _semanticMemory;
         private readonly IAgentPostProcessor _postProcessor;
         private readonly IAgentStrategy _strategy;
         private readonly IMultiLLMProvider _multiLLM;
@@ -40,7 +41,8 @@ namespace NetAgent.Runtime.Agents
             IEnumerable<IAgentTool> tools,
             IAgentPlanner planner,
             IContextSource contextSource,
-            IMemoryStore memoryStore,
+            IKeyValueMemoryStore keyValueMemoryStore,
+            ISemanticMemoryStore semanticMemoryStore,
             IAgentPostProcessor postProcessor,
             IAgentStrategy strategy,
             IMultiLLMProvider multiLLM,
@@ -53,7 +55,7 @@ namespace NetAgent.Runtime.Agents
             _tools = tools?.ToArray() ?? throw new ArgumentNullException(nameof(tools));
             _planner = planner ?? throw new ArgumentNullException(nameof(planner));
             _contextSource = contextSource ?? throw new ArgumentNullException(nameof(contextSource));
-            _memory = memoryStore ?? throw new ArgumentNullException(nameof(memoryStore));
+            _keyValueMemory = keyValueMemoryStore ?? throw new ArgumentNullException(nameof(keyValueMemoryStore));
             _postProcessor = postProcessor ?? throw new ArgumentNullException(nameof(postProcessor));
             _strategy = strategy ?? throw new ArgumentNullException(nameof(strategy));
             _multiLLM = multiLLM ?? throw new ArgumentNullException(nameof(multiLLM));
@@ -61,7 +63,7 @@ namespace NetAgent.Runtime.Agents
             _optimizer = optimizer ?? throw new ArgumentNullException(nameof(optimizer));
             _healthCheck = healthCheck ?? throw new ArgumentNullException(nameof(healthCheck));
             _options = options ?? throw new ArgumentNullException(nameof(options));
-            
+            _semanticMemory = semanticMemoryStore;
             if (options.PreferredProviders?.Any() == true)
             {
                 _llmPreferences = new LLMPreferences(options.PreferredProviders);
@@ -142,11 +144,19 @@ namespace NetAgent.Runtime.Agents
             prompt = new Prompt(optimizationResult.OptimizedPrompt);
 
             // Get relevant memories
-            var relevantMemories = await _memory.RetrieveAsync(prompt.Content);
-            if (!string.IsNullOrEmpty(relevantMemories))
+            var relevantKeyValueMemories = await _keyValueMemory.RetrieveAsync(prompt.Content);
+            if (!string.IsNullOrEmpty(relevantKeyValueMemories))
             {
-                await _memory.SaveAsync($"goal_{request.InputContext.Goal}", relevantMemories);
-                prompt.Content += "\nRelevant Context:\n" + relevantMemories;
+                await _keyValueMemory.SaveAsync($"goal_{request.InputContext.Goal}", relevantKeyValueMemories);
+                prompt.Content += "\nRelevant Context:\n" + relevantKeyValueMemories;
+            }
+
+            // Get relevant memories
+            var relevantSemanticMemories = await _semanticMemory.SearchAsync(prompt.Content);
+            if (relevantSemanticMemories.Count > 0)
+            {
+                await _semanticMemory.SaveAsync($"goal_{request.InputContext.Goal}", relevantKeyValueMemories);
+                prompt.Content += "\nRelevant Context:\n" + relevantKeyValueMemories;
             }
 
             // Create healthy preferences
@@ -237,7 +247,7 @@ namespace NetAgent.Runtime.Agents
             // Save to memory
             if (!string.IsNullOrEmpty(result.Output))
             {
-                await _memory.SaveAsync($"response_{request.InputContext.Goal}", result.Output);
+                await _keyValueMemory.SaveAsync($"response_{request.InputContext.Goal}", result.Output);
             }
 
             return result;

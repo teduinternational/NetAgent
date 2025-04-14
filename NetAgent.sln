@@ -69,6 +69,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NetAgent.LLM.Tests", "tests
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NetAgent.Runtime.Tests", "tests\NetAgent.Runtime.Tests\NetAgent.Runtime.Tests.csproj", "{6A6AFA95-751E-49EF-BDBD-FDE199497FB8}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NetAgent.Memory.SemanticQdrant", "src\NetAgent.Memory.SemanticQdrant\NetAgent.Memory.SemanticQdrant.csproj", "{7D09FB14-8299-86E6-C9E1-E8B7D6254045}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -159,6 +161,10 @@ Global
 		{6A6AFA95-751E-49EF-BDBD-FDE199497FB8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6A6AFA95-751E-49EF-BDBD-FDE199497FB8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6A6AFA95-751E-49EF-BDBD-FDE199497FB8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7D09FB14-8299-86E6-C9E1-E8B7D6254045}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7D09FB14-8299-86E6-C9E1-E8B7D6254045}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7D09FB14-8299-86E6-C9E1-E8B7D6254045}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7D09FB14-8299-86E6-C9E1-E8B7D6254045}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -191,6 +197,7 @@ Global
 		{A5F4C29A-D749-4E87-8B62-39E2B250DE56} = {A731528C-1E3A-4F2D-8A8E-5378F35BC042}
 		{9BCD6EDB-602F-4AF3-81BA-440E5303F163} = {A731528C-1E3A-4F2D-8A8E-5378F35BC042}
 		{6A6AFA95-751E-49EF-BDBD-FDE199497FB8} = {A731528C-1E3A-4F2D-8A8E-5378F35BC042}
+		{7D09FB14-8299-86E6-C9E1-E8B7D6254045} = {0388238D-24DE-42A4-A129-FEA26986EB7C}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {7DEE9960-9DA9-456E-A855-B55186FFBFB1}

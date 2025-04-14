@@ -2,6 +2,7 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using NetAgent.Abstractions.LLM;
 using NetAgent.Abstractions.Models;
+using NetAgent.LLM.Monitoring;
 using NetAgent.LLM.Providers;
 
 namespace NetAgent.LLM.Tests.Providers
@@ -12,8 +13,9 @@ namespace NetAgent.LLM.Tests.Providers
         private readonly Mock<ILLMProvider> _mockProvider2;
         private readonly Mock<IResponseScorer> _mockScorer;
         private readonly Mock<ILogger<IMultiLLMProvider>> _mockLogger;
-        private readonly Mock<ILLMPreferences> _mockPreferences;
         private readonly MultiLLMProvider _provider;
+        private readonly Mock<ILLMHealthCheck> _mockHealthCheck;
+        private readonly Mock<ILLMPreferences> _mockPreferences;
 
         public MultiLLMProviderTests()
         {
@@ -26,9 +28,11 @@ namespace NetAgent.LLM.Tests.Providers
             _mockScorer = new Mock<IResponseScorer>();
             _mockLogger = new Mock<ILogger<IMultiLLMProvider>>();
             _mockPreferences = new Mock<ILLMPreferences>();
+            _mockHealthCheck = new Mock<ILLMHealthCheck>();
 
             var providers = new[] { _mockProvider1.Object, _mockProvider2.Object };
-            _provider = new MultiLLMProvider(providers, _mockScorer.Object, _mockLogger.Object, _mockPreferences.Object);
+            _provider = new MultiLLMProvider(providers, _mockScorer.Object, 
+                _mockLogger.Object, _mockHealthCheck.Object, _mockPreferences.Object);
         }
 
         [Fact]

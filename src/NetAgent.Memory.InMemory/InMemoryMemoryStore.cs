@@ -2,7 +2,7 @@
 
 namespace NetAgent.Memory.InMemory
 {
-    public class InMemoryMemoryStore : IMemoryStore
+    public class InMemoryMemoryStore : IKeyValueMemoryStore
     {
         private readonly Dictionary<string, string> _memory = new();
         private readonly object _lock = new();

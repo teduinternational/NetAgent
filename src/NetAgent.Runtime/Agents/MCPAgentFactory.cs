@@ -27,7 +27,7 @@ namespace NetAgent.Runtime.Agents
         {
             var llm = _serviceProvider.GetRequiredService<IMultiLLMProvider>();
             var tools = _serviceProvider.GetServices<IAgentTool>().ToArray();
-            var memory = _serviceProvider.GetRequiredService<IMemoryStore>();
+            var memory = _serviceProvider.GetRequiredService<IKeyValueMemoryStore>();
             var planner = _serviceProvider.GetRequiredService<IAgentPlanner>();
             var contextSource = _serviceProvider.GetRequiredService<IContextSource>();
             var postProcessor = _serviceProvider.GetRequiredService<IAgentPostProcessor>();
@@ -39,7 +39,7 @@ namespace NetAgent.Runtime.Agents
             return await Task.FromResult(new MCPAgentBuilder()
                 .WithMultiLLM(llm)
                 .WithTools(tools)
-                .WithMemory(memory)
+                .WithKeyValueMemory(memory)
                 .WithPlanner(planner)
                 .WithContextSource(contextSource)
                 .WithPostProcessor(postProcessor)

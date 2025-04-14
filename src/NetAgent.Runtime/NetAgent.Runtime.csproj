@@ -20,6 +20,7 @@
     <ProjectReference Include="..\NetAgent.Evaluation\NetAgent.Evaluation.csproj" />
     <ProjectReference Include="..\NetAgent.LLM\NetAgent.LLM.csproj" />
     <ProjectReference Include="..\NetAgent.Memory.InMemory\NetAgent.Memory.InMemory.csproj" />
+    <ProjectReference Include="..\NetAgent.Memory.SemanticQdrant\NetAgent.Memory.SemanticQdrant.csproj" />
     <ProjectReference Include="..\NetAgent.Optimization\NetAgent.Optimization.csproj" />
     <ProjectReference Include="..\NetAgent.Planner\NetAgent.Planner.csproj" />
     <ProjectReference Include="..\NetAgent.Strategy\NetAgent.Strategy.csproj" />

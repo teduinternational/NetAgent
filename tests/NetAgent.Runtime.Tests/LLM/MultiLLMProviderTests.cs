@@ -2,6 +2,7 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using NetAgent.Abstractions.LLM;
 using NetAgent.Abstractions.Models;
+using NetAgent.LLM.Monitoring;
 using NetAgent.LLM.Preferences;
 using NetAgent.LLM.Providers;
 using NetAgent.LLM.Scoring;
@@ -15,6 +16,8 @@ namespace NetAgent.Runtime.Tests.LLM
         private readonly Mock<ILLMProvider> _mockProvider2;
         private readonly Mock<IResponseScorer> _mockScorer;
         private readonly Mock<ILogger<MultiLLMProvider>> _mockLogger;
+        private readonly Mock<ILLMHealthCheck> _mockHealthCheck;
+        private readonly Mock<ILLMPreferences> _mockPreferences;
 
         public MultiLLMProviderTests()
         {
@@ -22,7 +25,8 @@ namespace NetAgent.Runtime.Tests.LLM
             _mockProvider2 = new Mock<ILLMProvider>();
             _mockScorer = new Mock<IResponseScorer>();
             _mockLogger = new Mock<ILogger<MultiLLMProvider>>();
-
+            _mockHealthCheck = new Mock<ILLMHealthCheck>();
+            _mockPreferences = new Mock<ILLMPreferences>();
             // Setup provider names
             _mockProvider1.Setup(x => x.Name).Returns("Provider1");
             _mockProvider2.Setup(x => x.Name).Returns("Provider2");
@@ -33,7 +37,8 @@ namespace NetAgent.Runtime.Tests.LLM
         {
             // Arrange
             var providers = new[] { _mockProvider1.Object, _mockProvider2.Object };
-            var multiProvider = new MultiLLMProvider(providers, _mockScorer.Object, _mockLogger.Object);
+            var multiProvider = new MultiLLMProvider(providers, _mockScorer.Object,
+                _mockLogger.Object,_mockHealthCheck.Object, _mockPreferences.Object);
             var prompt = new Prompt { Content = "Test prompt" };
 
             _mockProvider1
@@ -58,7 +63,7 @@ namespace NetAgent.Runtime.Tests.LLM
         {
             // Arrange
             var providers = new[] { _mockProvider1.Object, _mockProvider2.Object };
-            var multiProvider = new MultiLLMProvider(providers, _mockScorer.Object, _mockLogger.Object);
+            var multiProvider = new MultiLLMProvider(providers, _mockScorer.Object, _mockLogger.Object,_mockHealthCheck.Object, _mockPreferences.Object);
             var prompt = new Prompt { Content = "Test prompt" };
 
             _mockProvider1
@@ -81,7 +86,7 @@ namespace NetAgent.Runtime.Tests.LLM
             // Arrange
             var providers = new[] { _mockProvider1.Object, _mockProvider2.Object };
             var preferences = new LLMPreferences(new[] { "Provider2" });
-            var multiProvider = new MultiLLMProvider(providers, _mockScorer.Object, _mockLogger.Object, preferences);
+            var multiProvider = new MultiLLMProvider(providers, _mockScorer.Object, _mockLogger.Object, _mockHealthCheck.Object, _mockPreferences.Object);
             var prompt = new Prompt { Content = "Test prompt" };
 
             _mockProvider2
@@ -102,7 +107,7 @@ namespace NetAgent.Runtime.Tests.LLM
         {
             // Arrange
             var providers = new[] { _mockProvider1.Object, _mockProvider2.Object };
-            var multiProvider = new MultiLLMProvider(providers, _mockScorer.Object, _mockLogger.Object);
+            var multiProvider = new MultiLLMProvider(providers, _mockScorer.Object, _mockLogger.Object, _mockHealthCheck.Object, _mockPreferences.Object);
             var prompt = new Prompt { Content = "Test prompt" };
 
             _mockProvider1

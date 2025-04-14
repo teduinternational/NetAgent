@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace NetAgent.Core.Memory
 {
-    public interface IMemoryStore
+    public interface IKeyValueMemoryStore
     {
         Task SaveAsync(string key, string value);
         Task<string?> RetrieveAsync(string key);

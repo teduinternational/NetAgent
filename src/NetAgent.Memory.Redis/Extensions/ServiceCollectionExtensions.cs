@@ -16,7 +16,7 @@ namespace NetAgent.Memory.Redis.Extensions
         {
             var redisConnectionString = config.GetConnectionString("Redis") ?? "localhost:6379";
             services.AddSingleton<IConnectionMultiplexer>(ConnectionMultiplexer.Connect(redisConnectionString));
-            services.AddSingleton<IMemoryStore, RedisMemoryStore>();
+            services.AddSingleton<IKeyValueMemoryStore, RedisMemoryStore>();
             return services;
         }
     }

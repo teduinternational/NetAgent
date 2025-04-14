@@ -7,7 +7,7 @@ namespace NetAgent.Memory.InMemory.Extensions
     {
         public static IServiceCollection AddInMemoryMemoryStore(this IServiceCollection services)
         {
-            services.AddSingleton<IMemoryStore, InMemoryMemoryStore>();
+            services.AddSingleton<IKeyValueMemoryStore, InMemoryMemoryStore>();
             return services;
         }
     }

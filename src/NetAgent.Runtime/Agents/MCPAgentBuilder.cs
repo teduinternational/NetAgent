@@ -17,6 +17,7 @@ using NetAgent.Strategy.Strategies;
 using NetAgent.Planner.Default;
 using NetAgent.LLM.Providers;
 using NetAgent.LLM.Monitoring;
+using NetAgent.Memory.SemanticQdrant;
 
 namespace NetAgent.Runtime.Agents
 {
@@ -26,7 +27,8 @@ namespace NetAgent.Runtime.Agents
         private IEnumerable<IAgentTool>? _tools;
         private IAgentPlanner? _planner;
         private IContextSource? _contextSource;
-        private IMemoryStore? _memory;
+        private IKeyValueMemoryStore? _keyValueMemory;
+        private ISemanticMemoryStore? _semanticMemory;
         private IAgentPostProcessor? _postProcessor;
         private IAgentStrategy? _strategy;
         private IMultiLLMProvider? _multiLLMProvider;
@@ -59,9 +61,14 @@ namespace NetAgent.Runtime.Agents
             return this;
         }
 
-        public MCPAgentBuilder WithMemory(IMemoryStore memory)
+        public MCPAgentBuilder WithKeyValueMemory(IKeyValueMemoryStore memory)
         {
-            _memory = memory;
+            _keyValueMemory = memory;
+            return this;
+        }
+        public MCPAgentBuilder WithSemanticMemory(ISemanticMemoryStore memory)
+        {
+            _semanticMemory = memory;
             return this;
         }
 
@@ -112,7 +119,8 @@ namespace NetAgent.Runtime.Agents
             _tools ??= Array.Empty<IAgentTool>();
             _planner ??= new DefaultPlanner();
             _contextSource ??= new DefaultContextSource();
-            _memory ??= new InMemoryMemoryStore();
+            _keyValueMemory ??= new InMemoryMemoryStore();
+            //_semanticMemory ??= new QdrantSemanticMemory();
             _options ??= new AgentOptions();
             
             // Verify LLM providers
@@ -141,7 +149,8 @@ namespace NetAgent.Runtime.Agents
                 _tools,
                 _planner,
                 _contextSource,
-                _memory,
+                _keyValueMemory,
+                _semanticMemory,
                 _postProcessor,
                 _strategy,
                 multiLLM,

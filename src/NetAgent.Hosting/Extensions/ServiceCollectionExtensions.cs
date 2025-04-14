@@ -123,7 +123,7 @@ namespace NetAgent.Hosting.Extensions
                 {
                     var multiLLM = sp.GetRequiredService<IMultiLLMProvider>();
                     var tools = sp.GetServices<IAgentTool>().ToArray();
-                    var memory = sp.GetRequiredService<IMemoryStore>();
+                    var memory = sp.GetRequiredService<IKeyValueMemoryStore>();
                     var planner = sp.GetRequiredService<IAgentPlanner>();
                     var context = sp.GetRequiredService<IContextSource>();
                     var postProcessor = sp.GetRequiredService<IAgentPostProcessor>();
@@ -139,7 +139,7 @@ namespace NetAgent.Hosting.Extensions
                     return new MCPAgentBuilder()
                         .WithMultiLLM(multiLLM)
                         .WithTools(tools)
-                        .WithMemory(memory)
+                        .WithKeyValueMemory(memory)
                         .WithPlanner(planner)
                         .WithContextSource(context)
                         .WithPostProcessor(postProcessor)
@@ -217,7 +217,7 @@ namespace NetAgent.Hosting.Extensions
             var type = configuration[CONFIG_MEMORY_KEY]?.ToLowerInvariant() ?? "inmemory";
             return type switch
             {
-                "inmemory" => services.AddSingleton<IMemoryStore, InMemoryMemoryStore>(),
+                "inmemory" => services.AddSingleton<IKeyValueMemoryStore, InMemoryMemoryStore>(),
                 _ => throw new InvalidOperationException($"Unknown memory store type: {type}")
             };
         }
