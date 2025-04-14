@@ -70,17 +70,17 @@ class Program
         // Configure LLM providers
         builder.Services.Configure<OpenAIOptions>(options => 
         {
-            options.Model = "gpt-4";
+            options.Model = "gpt-3.5-turbo";
         });
 
         builder.Services.Configure<ClaudeLLMOptions>(options =>
         {
-            options.Model = "claude-3-opus-20240229";
+            options.Model = "claude-3-5-sonnet-20241022";
         });
 
         builder.Services.Configure<DeepSeekOptions>(options =>
         {
-            options.Model = "deepseek-chat";
+            options.Model = "deepseek-coder";
         });
         builder.Services.Configure<GeminiOptions>(options =>
         {
