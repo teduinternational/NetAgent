@@ -78,51 +78,48 @@ class Program
         {
             Name = "Developer",
             Role = "You are a senior developer with expertise in Azure and authentication systems. You focus on technical implementation details and best practices.",
-            Goals = new[] { "Understand technical requirements", "Identify potential technical challenges", "Suggest implementation approach" },
+            Goals = ["Understand technical requirements", "Identify potential technical challenges", "Suggest implementation approach"],
             Temperature = 0.7f,
             MaxTokens = 2000,
-            Model = "gpt-4",
             SystemMessage = "You are an expert developer focusing on Azure solutions and best practices. Provide detailed technical insights and implementation strategies.",
             Memory = new MemoryOptions
             {
                 MaxTokens = 4000,
                 RelevanceThreshold = 0.7f
             },
-            PreferredProviders = new[] { "Claude" }, // Specify preferred providers for developer agent
+            PreferredProviders = ["Claude"], // Specify preferred providers for developer agent
         });
 
         var productOwnerAgent = await agentFactory.CreateAgent(new AgentOptions
         {
             Name = "Product Owner",
             Role = "You are a product owner who focuses on business value and user experience. You represent stakeholder interests and ensure requirements are clear.",
-            Goals = new[] { "Clarify business requirements", "Define acceptance criteria", "Ensure user value" },
+            Goals = ["Clarify business requirements", "Define acceptance criteria", "Ensure user value"],
             Temperature = 0.8f,
             MaxTokens = 1500,
-            Model = "gpt-4",
             SystemMessage = "You are a product owner focused on delivering business value. Consider user needs and stakeholder requirements in your responses.",
             Memory = new MemoryOptions
             {
                 MaxTokens = 3000,
                 RelevanceThreshold = 0.8f
             },
-            PreferredProviders = new[] { "Claude" }, // Product Owner prefers Claude
+            PreferredProviders = ["Claude"], // Product Owner prefers Claude
         });
 
         var scrumMasterAgent = await agentFactory.CreateAgent(new AgentOptions
         {
             Name = "Scrum Master",
             Role = "You are a scrum master who facilitates the discussion, ensures clarity, and helps identify blockers and dependencies.",
-            Goals = new[] { "Facilitate discussion", "Ensure clear requirements", "Identify blockers and risks" },
+            Goals = ["Facilitate discussion", "Ensure clear requirements", "Identify blockers and risks"],
             Temperature = 0.6f,
             MaxTokens = 1500,
-            Model = "gpt-4",
             SystemMessage = "You are a scrum master responsible for facilitating effective communication and identifying project risks. Keep discussions focused and productive.",
             Memory = new MemoryOptions
             {
                 MaxTokens = 3000,
                 RelevanceThreshold = 0.75f
             },
-            PreferredProviders = new[] { "Claude" }, // Scrum Master can use DeepSeek or OpenAI
+            PreferredProviders = ["Claude"], // Scrum Master can use DeepSeek or OpenAI
         });
 
         // Start the discussion about Azure SSO authentication story
