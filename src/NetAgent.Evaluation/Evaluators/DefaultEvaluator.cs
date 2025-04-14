@@ -42,14 +42,23 @@ namespace NetAgent.Evaluation.Evaluators
                 Provide evaluation score between 0.0 and 1.0, where 1.0 is perfect. Format your response as a JSON with score and feedback fields.
                 """;
 
-            var evaluation = await _llm.GenerateAsync(new Prompt { Content = evaluationPrompt });
+            var llmResponse = await _llm.GenerateAsync(new Prompt { Content = evaluationPrompt });
+
+            if (!llmResponse.IsError)
+            {
+                return new EvaluationResult
+                {
+                    IsError = true,
+                    Feedback = "Evaluation was not performed as LLM was not called."
+                };
+            }
             
             try
             {
                 // Try to parse JSON response
-                var jsonResponse = System.Text.Json.JsonDocument.Parse(evaluation.Content);
+                var jsonResponse = System.Text.Json.JsonDocument.Parse(llmResponse.Content);
                 var score = jsonResponse.RootElement.GetProperty("score").GetDouble();
-                var feedback = jsonResponse.RootElement.GetProperty("feedback").GetString() ?? evaluation.Content;
+                var feedback = jsonResponse.RootElement.GetProperty("feedback").GetString() ?? llmResponse.Content;
 
                 // Apply additional scoring if response scorer is available
                 if (_responseScorer != null)
@@ -70,7 +79,7 @@ namespace NetAgent.Evaluation.Evaluators
             {
                 // Fallback to basic parsing if JSON parsing fails
                 double score = _responseScorer?.ScoreResponse(output) ?? 1.0;
-                if (!double.TryParse(evaluation.Content, out var llmScore))
+                if (!double.TryParse(llmResponse.Content, out var llmScore))
                 {
                     llmScore = score;
                 }
@@ -80,7 +89,7 @@ namespace NetAgent.Evaluation.Evaluators
                 { 
                     Score = score,
                     IsAcceptable = score >= ACCEPTABLE_THRESHOLD,
-                    Feedback = evaluation.Content
+                    Feedback = llmResponse.Content
                 };
             }
         }

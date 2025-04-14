@@ -6,17 +6,6 @@ using NetAgent.Abstractions.Models;
 using Microsoft.Extensions.Configuration;
 using NetAgent.Abstractions;
 using NetAgent.LLM.Extensions;
-using NetAgent.LLM.Factory;
-using NetAgent.Abstractions.LLM;
-using NetAgent.LLM.OpenAI;
-using NetAgent.LLM.Claude;
-using NetAgent.LLM.DeepSeek;
-using NetAgent.LLM.Monitoring;
-using NetAgent.LLM.RateLimiting;
-using NetAgent.LLM.OpenAI.Extensions;
-using NetAgent.LLM.Claude.Extensions;
-using NetAgent.LLM.DeepSeek.Extensions;
-using NetAgent.LLM.Gemini;
 
 class Program
 {
@@ -67,58 +56,12 @@ class Program
             }
         );
 
-        // Configure LLM providers
-        builder.Services.Configure<OpenAIOptions>(options => 
-        {
-            options.Model = "gpt-3.5-turbo";
-        });
-
-        builder.Services.Configure<ClaudeLLMOptions>(options =>
-        {
-            options.Model = "claude-3-5-sonnet-20241022";
-        });
-
-        builder.Services.Configure<DeepSeekOptions>(options =>
-        {
-            options.Model = "deepseek-coder";
-        });
-        builder.Services.Configure<GeminiOptions>(options =>
-        {
-            options.Model = "gemini-1.5-flash";
-        });
-
         // Add multi-provider support and scan for plugins
         builder.Services.AddMultiLLMProviders()
             .ScanAndRegisterLLMPlugins();
         
         var host = builder.Build();
         var serviceProvider = host.Services;
-
-        // Add health check monitoring
-        var healthCheck = serviceProvider.GetRequiredService<ILLMHealthCheck>();
-        
-        // Run initial health check and cache results
-        var healthResults = await healthCheck.CheckAllProvidersAsync();
-        
-        var hasHealthyProvider = false;
-        foreach (var (provider, result) in healthResults)
-        {
-            Console.WriteLine($"Provider {provider} health status: {result.Status}");
-            if (result.Status != HealthStatus.Healthy)
-            {
-                Console.WriteLine($"Message: {result.Message}");
-            }
-            else
-            {
-                hasHealthyProvider = true;
-            }
-        }
-
-        if (!hasHealthyProvider)
-        {
-            Console.WriteLine("Error: No healthy LLM providers available. Please check your configuration and try again.");
-            return; // Exit if no providers are healthy
-        }
 
         // Create agents using registered MultiLLMProvider
         var agentFactory = serviceProvider.GetRequiredService<IAgentFactory>();

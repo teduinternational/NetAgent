@@ -110,6 +110,31 @@ namespace NetAgent.Runtime.Agents
 
             // Optimize the prompt
             var optimizationResult = await _optimizer.OptimizeAsync(prompt.Content, request.InputContext.Goal, request.InputContext.Context);
+            
+            // Nếu tối ưu prompt bị lỗi, thử với provider khác
+            if (optimizationResult.IsError && _multiLLM != null)
+            {
+                if (_llm != null && healthyProviders.Contains(_llm.Name))
+                {
+                    healthyProviders.Remove(_llm.Name);
+                }
+
+                if (healthyProviders.Any())
+                {
+                    // Tạo preferences mới với các provider còn lại
+                    var fallbackPreferences = new LLMPreferences(healthyProviders);
+                    var fallbackMultiLLM = new MultiLLMProvider(
+                        _multiLLM.GetProviders(),
+                        _multiLLM.GetScorer(),
+                        _multiLLM.GetLogger(),
+                        fallbackPreferences
+                    );
+
+                    // Thử tối ưu lại với provider khác
+                    optimizationResult = await _optimizer.OptimizeAsync(prompt.Content, request.InputContext.Goal, request.InputContext.Context);
+                }
+            }
+
             prompt = new Prompt { Content = optimizationResult.OptimizedPrompt };
 
             // Get relevant memories
@@ -146,11 +171,49 @@ namespace NetAgent.Runtime.Agents
 
             // Evaluate response
             var evaluationResult = await _evaluator.EvaluateAsync(prompt.Content, response.Content, request.InputContext.Goal, request.InputContext.Context);
-            if (!evaluationResult.IsAcceptable)
+            
+            if (evaluationResult.IsError)
             {
-                // If evaluation fails, try to regenerate with feedback
-                prompt.Content += "\nPrevious response was not acceptable. Please improve based on this feedback: " + evaluationResult.Feedback;
-                response = await _llm.GenerateAsync(prompt);
+                // Critical error case - try with different provider
+                if (_llm != null && healthyProviders.Contains(_llm.Name))
+                {
+                    healthyProviders.Remove(_llm.Name);
+                }
+
+                // If we still have healthy providers, try with a different one
+                if (healthyProviders.Any() && _multiLLM != null)
+                {
+                    // Create new preferences with remaining healthy providers
+                    var fallbackPreferences = new LLMPreferences(healthyProviders);
+                    var fallbackMultiLLM = new MultiLLMProvider(
+                        _multiLLM.GetProviders(),
+                        _multiLLM.GetScorer(),
+                        _multiLLM.GetLogger(),
+                        fallbackPreferences
+                    );
+
+                    prompt.Content += "\nPrevious response had critical errors. Please fix based on this feedback: " + evaluationResult.Feedback;
+                    response = await fallbackMultiLLM.GenerateAsync(prompt);
+                }
+                else
+                {
+                    // Log critical error when we can't retry
+                    System.Diagnostics.Debug.WriteLine("Critical: Could not retry with different LLM provider - no healthy providers available");
+                }
+            }
+            else if (!evaluationResult.IsAcceptable)
+            {
+                // Not acceptable but not critical error - try to improve with same provider
+                prompt.Content += "\nPrevious response needs improvement based on this feedback: " + evaluationResult.Feedback;
+                
+                if (_multiLLM != null)
+                {
+                    response = await _multiLLM.GenerateAsync(prompt);
+                }
+                else
+                {
+                    response = await _llm.GenerateAsync(prompt);
+                }
             }
 
             // Create and process response

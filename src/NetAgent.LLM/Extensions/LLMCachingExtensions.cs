@@ -1,9 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 using NetAgent.Abstractions.LLM;
 using NetAgent.LLM.Caching;
-using System;
-using System.Linq;
 
 namespace NetAgent.LLM.Extensions
 {

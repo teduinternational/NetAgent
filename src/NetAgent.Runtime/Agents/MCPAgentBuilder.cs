@@ -131,7 +131,7 @@ namespace NetAgent.Runtime.Agents
                 Microsoft.Extensions.Options.Options.Create(new HealthCheckOptions()));
             
             // Initialize remaining dependencies with the selected LLM
-            _optimizer ??= new PromptOptimizer(selectedLLM, _healthCheck);
+            _optimizer ??= new DefaultOptimizer(selectedLLM, _healthCheck);
             _postProcessor ??= new OptimizationPostProcessor(_optimizer);
             _strategy ??= new GoalDrivenStrategy();
             _evaluator ??= new DefaultEvaluator(selectedLLM);

@@ -1,5 +1,6 @@
 using NetAgent.Abstractions.LLM;
 using NetAgent.Abstractions.Models;
+using NetAgent.LLM.Monitoring;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -9,11 +10,13 @@ namespace NetAgent.LLM.Caching
     {
         private readonly ILLMProvider _innerProvider;
         private readonly ILLMResponseCache _cache;
+        private readonly ILLMMetricsCollector _metrics;
 
-        public CachingLLMProviderDecorator(ILLMProvider provider, ILLMResponseCache cache)
+        public CachingLLMProviderDecorator(ILLMProvider provider, ILLMResponseCache cache, ILLMMetricsCollector metrics)
         {
             _innerProvider = provider;
             _cache = cache;
+            _metrics = metrics;
         }
 
         public string Name => _innerProvider.Name;
@@ -22,7 +25,12 @@ namespace NetAgent.LLM.Caching
         {
             if (!await IsHealthyAsync())
             {
-                throw new LLMException($"Provider {Name} is not healthy");
+                _metrics.RecordError(Name, "ProviderUnhealthy");
+                return new LLMResponse()
+                {
+                    Content = "Provider is unhealthy, unable to generate response.",
+                    IsError = true,
+                };
             }
 
             var cacheKey = GenerateCacheKey(prompt);
@@ -45,7 +53,17 @@ namespace NetAgent.LLM.Caching
 
         public async Task<bool> IsHealthyAsync()
         {
-            return await _innerProvider.IsHealthyAsync() && await IsCacheHealthyAsync();
+            try 
+            {
+                var isProviderHealthy = await _innerProvider.IsHealthyAsync() && await IsCacheHealthyAsync();
+                _metrics.RecordHealth(Name, isProviderHealthy); 
+                return isProviderHealthy;
+            }
+            catch (Exception ex)
+            {
+                _metrics.RecordError(Name, ex.GetType().Name);
+                return false;
+            }
         }
 
         private async Task<bool> IsCacheHealthyAsync()

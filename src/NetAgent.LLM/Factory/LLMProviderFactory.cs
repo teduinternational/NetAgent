@@ -54,14 +54,14 @@ namespace NetAgent.LLM.Factory
             var cache = _serviceProvider.GetService<ILLMResponseCache>();
             if (cache != null)
             {
-                provider = new CachingLLMProviderDecorator(provider, cache);
+                provider = new CachingLLMProviderDecorator(provider, cache, metrics);
             }
 
             // Add rate limiting if available
             var rateLimiter = _serviceProvider.GetService<ILLMRateLimiter>();
             if (rateLimiter != null)
             {
-                provider = new RateLimitingLLMProviderDecorator(provider, rateLimiter);
+                provider = new RateLimitingLLMProviderDecorator(provider, rateLimiter, metrics);
             }
 
             return provider;

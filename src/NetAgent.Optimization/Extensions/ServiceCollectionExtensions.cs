@@ -14,7 +14,7 @@ namespace NetAgent.Optimization.Extensions
 
             return type switch
             {
-                "prompt" => services.AddSingleton<IOptimizer, PromptOptimizer>(),
+                "prompt" => services.AddSingleton<IOptimizer, DefaultOptimizer>(),
                 "dummy" => services.AddSingleton<IOptimizer, DummyOptimizer>(),
                 _ => throw new InvalidOperationException($"Unknown optimizer type: {type}")
             };

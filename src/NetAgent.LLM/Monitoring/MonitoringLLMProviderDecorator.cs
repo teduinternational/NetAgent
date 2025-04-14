@@ -23,7 +23,12 @@ namespace NetAgent.LLM.Monitoring
         {
             if (!await IsHealthyAsync())
             {
-                throw new LLMException($"Provider {Name} is not healthy");
+                _metrics.RecordError(Name, "ProviderUnhealthy");
+                return new LLMResponse()
+                {
+                    Content = "Provider is unhealthy, unable to generate response.",
+                    IsError = true,
+                };
             }
 
             var stopwatch = Stopwatch.StartNew();

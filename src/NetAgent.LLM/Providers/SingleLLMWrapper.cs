@@ -91,7 +91,7 @@ namespace NetAgent.LLM.Providers
             {
                 return await _provider.IsHealthyAsync();
             }
-            catch
+            catch (Exception)
             {
                 return false;
             }

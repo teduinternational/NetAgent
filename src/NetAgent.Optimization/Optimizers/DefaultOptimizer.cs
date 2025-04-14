@@ -5,14 +5,14 @@ using NetAgent.Optimization.Models;
 using NetAgent.LLM.Monitoring;
 using System.Text.Json;
 
-namespace NetAgent.Optimization.SelfImproving
+namespace NetAgent.Optimization.Optimizers
 {
-    public class SelfImprovingOptimizer : IOptimizer
+    public class DefaultOptimizer : IOptimizer
     {
         private readonly ILLMProvider _llmProvider;
         private readonly ILLMHealthCheck _healthCheck;
 
-        public SelfImprovingOptimizer(ILLMProvider llmProvider, ILLMHealthCheck healthCheck)
+        public DefaultOptimizer(ILLMProvider llmProvider, ILLMHealthCheck healthCheck)
         {
             _llmProvider = llmProvider;
             _healthCheck = healthCheck;
@@ -28,7 +28,11 @@ namespace NetAgent.Optimization.SelfImproving
         {
             if (!await IsHealthyAsync())
             {
-                throw new InvalidOperationException($"LLM Provider {_llmProvider.Name} is not healthy");
+                return new OptimizationResult()
+                {
+                    IsError = true,
+                    OptimizedPrompt = "Provider is unhealthy, unable to generate response."
+                };
             }
 
             var optimizationPrompt = @$"As an AI optimizer, analyze and enhance the following prompt while considering its goal and context. Apply self-improving techniques to generate an optimal version.

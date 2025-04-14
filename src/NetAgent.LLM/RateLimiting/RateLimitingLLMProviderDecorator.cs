@@ -1,5 +1,6 @@
 using NetAgent.Abstractions.LLM;
 using NetAgent.Abstractions.Models;
+using NetAgent.LLM.Monitoring;
 
 namespace NetAgent.LLM.RateLimiting
 {
@@ -7,13 +8,16 @@ namespace NetAgent.LLM.RateLimiting
     {
         private readonly ILLMProvider _innerProvider;
         private readonly ILLMRateLimiter _rateLimiter;
+        private readonly ILLMMetricsCollector _metrics;
 
         public RateLimitingLLMProviderDecorator(
             ILLMProvider provider,
-            ILLMRateLimiter rateLimiter)
+            ILLMRateLimiter rateLimiter,
+            ILLMMetricsCollector metrics)
         {
             _innerProvider = provider;
             _rateLimiter = rateLimiter;
+            _metrics = metrics;
         }
 
         public string Name => _innerProvider.Name;
@@ -22,7 +26,13 @@ namespace NetAgent.LLM.RateLimiting
         {
             if (!await IsHealthyAsync())
             {
-                throw new LLMException($"Provider {Name} is not healthy");
+                _metrics.RecordError(Name, "ProviderUnhealthy");
+
+                return new LLMResponse()
+                {
+                    Content = "Provider is unhealthy, unable to generate response.",
+                    IsError = true,
+                };
             }
 
             try
@@ -41,7 +51,19 @@ namespace NetAgent.LLM.RateLimiting
 
         public async Task<bool> IsHealthyAsync()
         {
-            return await _innerProvider.IsHealthyAsync();
+            try
+            {
+                var isProviderHealthy = await _innerProvider.IsHealthyAsync();
+                _metrics.RecordHealth(Name, isProviderHealthy);
+                _rateLimiter.ReportSuccess(Name);
+                return isProviderHealthy;
+            }
+            catch (Exception ex)
+            {
+                _rateLimiter.ReportFailure(Name);
+                _metrics.RecordError(Name, ex.GetType().Name);
+                return false;
+            }
         }
     }
 }
