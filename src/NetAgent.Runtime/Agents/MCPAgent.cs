@@ -72,7 +72,10 @@ namespace NetAgent.Runtime.Agents
 
         public async Task<AgentResponse> ProcessAsync(AgentRequest request)
         {
-            request.InputContext = request.InputContext ?? new AgentInputContext();
+            request.InputContext = request.InputContext ?? new AgentInputContext()
+            {
+                Goal = request.Goal,
+            };
             
             // Health check logic
             var healthResults = await _healthCheck.CheckAllProvidersAsync();
@@ -102,8 +105,8 @@ namespace NetAgent.Runtime.Agents
             {
                 Goal = request.InputContext.Goal,
                 Context = request.InputContext.Context,
-                Plan = plan.ToString(),
-                ToolOutput = decision.ToString()
+                Plan = plan !=null ? plan.Goal : "No Plan",
+                ToolOutput = decision != null ? decision.Plan : "No Plan",
             };
 
             var prompt = BuildPrompt(agentContext);
@@ -136,7 +139,7 @@ namespace NetAgent.Runtime.Agents
                 }
             }
 
-            prompt = new Prompt { Content = optimizationResult.OptimizedPrompt };
+            prompt = new Prompt(optimizationResult.OptimizedPrompt);
 
             // Get relevant memories
             var relevantMemories = await _memory.RetrieveAsync(prompt.Content);
