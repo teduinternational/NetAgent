@@ -13,6 +13,7 @@ using NetAgent.LLM.Preferences;
 using System.Text;
 using NetAgent.LLM.Providers;
 using NetAgent.LLM.Monitoring;
+using NetAgent.Core.Utils;
 
 namespace NetAgent.Runtime.Agents
 {
@@ -69,7 +70,7 @@ namespace NetAgent.Runtime.Agents
                 _llmPreferences = new LLMPreferences(options.PreferredProviders);
             }
         }
-
+        public Guid Id { get; set; } = Guid.NewGuid();
         public string Name => _options.Name ?? "MCPAgent";
 
         public async Task<AgentResponse> ProcessAsync(AgentRequest request)
@@ -155,8 +156,14 @@ namespace NetAgent.Runtime.Agents
             var relevantSemanticMemories = await _semanticMemory.SearchAsync(prompt.Content);
             if (relevantSemanticMemories.Count > 0)
             {
-                await _semanticMemory.SaveAsync($"goal_{request.InputContext.Goal}", relevantKeyValueMemories);
-                prompt.Content += "\nRelevant Context:\n" + relevantKeyValueMemories;
+                await _semanticMemory.SaveAsync(1, prompt.Content);
+                var resultString = PayloadHelper.ConvertSearchResultsToString(relevantSemanticMemories);
+
+                prompt.Content += "\nRelevant Context:\n" + resultString;
+            }
+            else
+            {
+                await _semanticMemory.SaveAsync(1, prompt.Content);
             }
 
             // Create healthy preferences

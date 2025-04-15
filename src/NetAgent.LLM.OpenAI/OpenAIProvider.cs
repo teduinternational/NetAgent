@@ -16,21 +16,60 @@ namespace NetAgent.LLM.OpenAI
         public OpenAIProvider(OpenAIOptions options)
         {
             _options = options ?? throw new ArgumentNullException(nameof(options));
-            _client = new OpenAI_API.OpenAIAPI(_options.ApiKey);
+            _client = new OpenAIAPI(_options.ApiKey);
         }
 
         public string Name => "openai";
 
         public bool SupportsStreaming => true;
 
-        public Task<LLMResponse> GenerateAsync(Prompt prompt)
+        public async Task<LLMResponse> GenerateAsync(Prompt prompt)
         {
-            throw new NotImplementedException();
+            if (prompt == null)
+            {
+                throw new ArgumentNullException(nameof(prompt));
+            }
+
+            var completionRequest = new OpenAI_API.Completions.CompletionRequest {
+                Prompt = prompt.Content,
+                Model = _options.Model,
+                MaxTokens = _options.MaxTokens,
+                Temperature = _options.Temperature
+            };
+
+            var completionResponse = await _client.Completions.CreateCompletionAsync(completionRequest);
+            var result = completionResponse.Completions.FirstOrDefault()?.Text;
+
+            if (result == null)
+            {
+                throw new InvalidOperationException("Failed to generate completion.");
+            }
+
+            return new LLMResponse()
+            {
+                Content = result
+            };
         }
 
-        public IAsyncEnumerable<LLMResponseChunk> GenerateStreamAsync(Prompt prompt)
+        public async IAsyncEnumerable<LLMResponseChunk> GenerateStreamAsync(Prompt prompt)
         {
-            throw new NotImplementedException();
+            if (prompt == null)
+            {
+                throw new ArgumentNullException(nameof(prompt));
+            }
+
+            var completionRequest = new OpenAI_API.Completions.CompletionRequest
+            {
+                Prompt = prompt.Content,
+                Model = _options.Model,
+                MaxTokens = _options.MaxTokens,
+                Temperature = _options.Temperature,
+            };
+
+            await foreach (var chunk in _client.Completions.StreamCompletionEnumerableAsync(completionRequest))
+            {
+                yield return new LLMResponseChunk { Content = chunk.ToString() };
+            }
         }
 
         public async Task<bool> IsHealthyAsync()

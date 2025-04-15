@@ -44,12 +44,8 @@ namespace NetAgent.LLM.Monitoring
                 using var cts = new CancellationTokenSource(_options.Timeout);
 
                 // Send a simple test prompt
-                var response = await llmProvider.GenerateAsync(new Abstractions.Models.Prompt
-                {
-                    Content = "Test health check."
-                });
+                var success = await llmProvider.IsHealthyAsync();
 
-                var success = !string.IsNullOrEmpty(response?.Content);
                 UpdateHealthHistory(provider, success);
 
                 var status = DetermineHealthStatus(provider);

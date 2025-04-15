@@ -140,10 +140,8 @@ namespace NetAgent.Runtime.Agents
             _contextSource ??= new DefaultContextSource();
             _keyValueMemory ??= new InMemoryMemoryStore();
             _options ??= new AgentOptions();
-
-            var httpClient = new HttpClient();
             var embedding = new MultiLLMEmbeddingProvider([_llm]);
-            _semanticMemory ??= new QdrantSemanticMemory(httpClient, embedding, _qdrantOptions);
+            _semanticMemory ??= new QdrantSemanticMemory(_qdrantOptions, embedding);
             // Create default health check if not provided
             _healthCheck ??= new DefaultLLMHealthCheck(
                 multiLLM.GetProviders(),

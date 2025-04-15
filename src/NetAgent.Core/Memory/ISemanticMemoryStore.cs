@@ -1,8 +1,10 @@
-﻿namespace NetAgent.Core.Memory
+﻿using NetAgent.Abstractions.Models;
+
+namespace NetAgent.Core.Memory
 {
     public interface ISemanticMemoryStore
     {
-        Task SaveAsync(string text, string id = null);
-        Task<IReadOnlyList<(string text, float score)>> SearchAsync(string query, int topK = 3, float minScore = 0.75f);
+        Task SaveAsync(ulong id, string text);
+        Task<IReadOnlyList<SemanticSearchResult>> SearchAsync(string query);
     }
 }
