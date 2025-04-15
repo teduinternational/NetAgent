@@ -96,5 +96,10 @@ namespace NetAgent.LLM.Providers
                 return false;
             }
         }
+
+        public Task<float[]> GetEmbeddingAsync(string input)
+        {
+            return _provider.GetEmbeddingAsync(input);
+        }
     }
 }

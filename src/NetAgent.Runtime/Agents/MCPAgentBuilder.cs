@@ -18,11 +18,13 @@ using NetAgent.Planner.Default;
 using NetAgent.LLM.Providers;
 using NetAgent.LLM.Monitoring;
 using NetAgent.Memory.SemanticQdrant;
+using NetAgent.Memory.SemanticQdrant.Models;
 
 namespace NetAgent.Runtime.Agents
 {
     public class MCPAgentBuilder
     {
+        private QdrantOptions _qdrantOptions;
         private ILLMProvider? _llm;
         private IEnumerable<IAgentTool>? _tools;
         private IAgentPlanner? _planner;
@@ -114,15 +116,14 @@ namespace NetAgent.Runtime.Agents
             return this;
         }
 
+        public MCPAgentBuilder WithQdrantOptions(QdrantOptions options)
+        {
+            _qdrantOptions = options;
+            return this;
+        }
+
         public IAgent Build()
         {
-            _tools ??= Array.Empty<IAgentTool>();
-            _planner ??= new DefaultPlanner();
-            _contextSource ??= new DefaultContextSource();
-            _keyValueMemory ??= new InMemoryMemoryStore();
-            //_semanticMemory ??= new QdrantSemanticMemory();
-            _options ??= new AgentOptions();
-            
             // Verify LLM providers
             if (_multiLLMProvider == null && _llm == null)
             {
@@ -130,14 +131,24 @@ namespace NetAgent.Runtime.Agents
             }
 
             // If multiLLM is not provided, create a basic implementation that wraps the single LLM
-            var multiLLM = _multiLLMProvider ?? new SingleLLMWrapper(_llm ?? 
+            var multiLLM = _multiLLMProvider ?? new SingleLLMWrapper(_llm ??
                 throw new InvalidOperationException("No valid LLM Provider available."));
 
+
+            _tools ??= Array.Empty<IAgentTool>();
+            _planner ??= new DefaultPlanner();
+            _contextSource ??= new DefaultContextSource();
+            _keyValueMemory ??= new InMemoryMemoryStore();
+            _options ??= new AgentOptions();
+
+            var httpClient = new HttpClient();
+            var embedding = new MultiLLMEmbeddingProvider([_llm]);
+            _semanticMemory ??= new QdrantSemanticMemory(httpClient, embedding, _qdrantOptions);
             // Create default health check if not provided
             _healthCheck ??= new DefaultLLMHealthCheck(
                 multiLLM.GetProviders(),
                 Microsoft.Extensions.Options.Options.Create(new HealthCheckOptions()));
-            
+
             // Initialize remaining dependencies with multiLLM
             _optimizer ??= new DefaultOptimizer(multiLLM, _healthCheck);
             _postProcessor ??= new OptimizationPostProcessor(_optimizer);

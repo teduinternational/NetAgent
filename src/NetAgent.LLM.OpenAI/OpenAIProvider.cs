@@ -19,7 +19,7 @@ namespace NetAgent.LLM.OpenAI
             _client = new OpenAI_API.OpenAIAPI(_options.ApiKey);
         }
 
-        public string Name => "OpenAI";
+        public string Name => "openai";
 
         public bool SupportsStreaming => true;
 
@@ -44,6 +44,23 @@ namespace NetAgent.LLM.OpenAI
             {
                 return false;
             }
+        }
+
+        public async Task<float[]> GetEmbeddingAsync(string input)
+        {
+            if (string.IsNullOrWhiteSpace(input))
+            {
+                throw new ArgumentException("Input cannot be null or whitespace.", nameof(input));
+            }
+
+            var embeddingRequest = new OpenAI_API.Embedding.EmbeddingRequest
+            {
+                Input = input,
+                Model = _options.EmbeddingModel
+            };
+
+            var embeddingResponse = await _client.Embeddings.CreateEmbeddingAsync(embeddingRequest);
+            return embeddingResponse.Data.FirstOrDefault()?.Embedding ?? throw new InvalidOperationException("Failed to generate embedding.");
         }
     }
 }

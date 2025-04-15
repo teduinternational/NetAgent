@@ -209,5 +209,10 @@ namespace NetAgent.LLM.Providers
                 healthResults.TryGetValue(p.Name, out var result) && 
                 result.Status == HealthStatus.Healthy);
         }
+
+        public Task<float[]> GetEmbeddingAsync(string input)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

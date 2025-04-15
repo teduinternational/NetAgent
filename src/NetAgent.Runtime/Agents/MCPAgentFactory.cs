@@ -11,6 +11,9 @@ using NetAgent.Runtime.PostProcessing;
 using NetAgent.Strategy;
 using Microsoft.Extensions.DependencyInjection;
 using NetAgent.LLM.Monitoring;
+using NetAgent.Memory.SemanticQdrant.Models;
+using Microsoft.Extensions.Options;
+using System;
 
 namespace NetAgent.Runtime.Agents
 {
@@ -25,7 +28,7 @@ namespace NetAgent.Runtime.Agents
 
         public async Task<IAgent> CreateAgent(AgentOptions options)
         {
-            var llm = _serviceProvider.GetRequiredService<IMultiLLMProvider>();
+            var llmProvider = _serviceProvider.GetRequiredService<ILLMProvider>();
             var tools = _serviceProvider.GetServices<IAgentTool>().ToArray();
             var memory = _serviceProvider.GetRequiredService<IKeyValueMemoryStore>();
             var planner = _serviceProvider.GetRequiredService<IAgentPlanner>();
@@ -34,10 +37,10 @@ namespace NetAgent.Runtime.Agents
             var strategy = _serviceProvider.GetRequiredService<IAgentStrategy>();
             var evaluator = _serviceProvider.GetRequiredService<IEvaluator>();
             var optimizer = _serviceProvider.GetRequiredService<IOptimizer>();
-            var healthCheck = _serviceProvider.GetRequiredService<ILLMHealthCheck>();
+            var qdrantOptions = _serviceProvider.GetRequiredService<IOptions<QdrantOptions>>().Value;
 
             return await Task.FromResult(new MCPAgentBuilder()
-                .WithMultiLLM(llm)
+                .WithLLM(llmProvider)
                 .WithTools(tools)
                 .WithKeyValueMemory(memory)
                 .WithPlanner(planner)
@@ -47,7 +50,7 @@ namespace NetAgent.Runtime.Agents
                 .WithEvaluator(evaluator)
                 .WithOptimizer(optimizer)
                 .WithOptions(options)
-                .WithHealthCheck(healthCheck)
+                .WithQdrantOptions(qdrantOptions)
                 .Build());
         }
     }

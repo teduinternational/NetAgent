@@ -16,7 +16,7 @@ namespace NetAgent.LLM.Claude
             _client = new AnthropicClient(_options.ApiKey);
         }
 
-        public string Name => "Claude";
+        public string Name => "claude";
 
         public async Task<LLMResponse> GenerateAsync(Prompt prompt)
         {
@@ -46,6 +46,11 @@ namespace NetAgent.LLM.Claude
             {
                 throw new LLMException($"Claude API error: {ex.Message}", ex);
             }
+        }
+
+        public Task<float[]> GetEmbeddingAsync(string input)
+        {
+            throw new NotImplementedException();
         }
 
         public async Task<bool> IsHealthyAsync()

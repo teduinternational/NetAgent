@@ -26,6 +26,8 @@ using NetAgent.LLM.Claude.Extensions;
 using NetAgent.LLM.DeepSeek.Extensions;
 using NetAgent.LLM.Gemini.Extensions;
 using NetAgent.LLM.Monitoring;
+using NetAgent.Memory.SemanticQdrant;
+using NetAgent.Memory.SemanticQdrant.Extensions;
 
 namespace NetAgent.Hosting.Extensions
 {
@@ -218,7 +220,8 @@ namespace NetAgent.Hosting.Extensions
             return type switch
             {
                 "inmemory" => services.AddSingleton<IKeyValueMemoryStore, InMemoryMemoryStore>(),
-                _ => throw new InvalidOperationException($"Unknown memory store type: {type}")
+                "qdrant" => services.AddQdrantSemanticMemory(configuration),
+                _ => throw new InvalidOperationException($"Unknown memory store type: {type}"),
             };
         }
 

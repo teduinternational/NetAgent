@@ -7,5 +7,6 @@ namespace NetAgent.Abstractions.LLM
         string Name { get; }
         Task<LLMResponse> GenerateAsync(Prompt prompt);
         Task<bool> IsHealthyAsync();
+        Task<float[]> GetEmbeddingAsync(string input);
     }
 }

@@ -17,7 +17,7 @@ namespace NetAgent.LLM.Gemini
             _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {_options.ApiKey}");
         }
 
-        public string Name => "Gemini";
+        public string Name => "gemini";
 
         public async Task<LLMResponse> GenerateAsync(Prompt prompt)
         {
@@ -65,6 +65,36 @@ namespace NetAgent.LLM.Gemini
             {
                 return false;
             }
+        }
+
+        public async Task<float[]> GetEmbeddingAsync(string input)
+        {
+            if (string.IsNullOrWhiteSpace(input))
+            {
+                throw new ArgumentException("Input cannot be null or whitespace.", nameof(input));
+            }
+
+            var requestBody = new
+            {
+                model = _options.EmbeddingModel,
+                input
+            };
+
+            var content = new StringContent(JsonConvert.SerializeObject(requestBody), Encoding.UTF8, "application/json");
+
+            var response = await _httpClient.PostAsync(
+                $"https://generativelanguage.googleapis.com/v1beta/models/{_options.Model}:embedText",
+                content
+            );
+
+            response.EnsureSuccessStatusCode();
+
+            var responseString = await response.Content.ReadAsStringAsync();
+            var result = JsonConvert.DeserializeObject<dynamic>(responseString);
+
+            var embedding = ((IEnumerable<dynamic>)result.embeddings[0].values).Select(v => (float)v).ToArray();
+
+            return embedding;
         }
     }
 }

@@ -4,7 +4,7 @@ using NetAgent.Abstractions.Models;
 
 namespace NetAgent.LLM.Monitoring
 {
-    public class MonitoringLLMProviderDecorator : ILLMProvider 
+    public class MonitoringLLMProviderDecorator : ILLMProvider
     {
         private readonly ILLMProvider _innerProvider;
         private readonly ILLMMetricsCollector _metrics;
@@ -57,6 +57,11 @@ namespace NetAgent.LLM.Monitoring
                 _metrics.RecordError(Name, ex.GetType().Name);
                 throw;
             }
+        }
+
+        public Task<float[]> GetEmbeddingAsync(string input)
+        {
+            return _innerProvider.GetEmbeddingAsync(input);
         }
 
         public async Task<bool> IsHealthyAsync()

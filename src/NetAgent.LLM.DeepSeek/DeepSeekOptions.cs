@@ -6,5 +6,7 @@ namespace NetAgent.LLM.DeepSeek
         public string Model { get; set; } = "deepseek-coder";
         public double? Temperature { get; set; } = 0.7;
         public int? MaxTokens { get; set; } = 2000;
+        public string EmbeddingModel { set; get; }
+
     }
 }

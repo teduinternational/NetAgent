@@ -49,6 +49,11 @@ namespace NetAgent.LLM.RateLimiting
             }
         }
 
+        public Task<float[]> GetEmbeddingAsync(string input)
+        {
+            return _innerProvider.GetEmbeddingAsync(input);
+        }
+
         public async Task<bool> IsHealthyAsync()
         {
             try

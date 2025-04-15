@@ -6,10 +6,9 @@ using NetAgent.Abstractions.Models;
 using Microsoft.Extensions.Configuration;
 using NetAgent.Abstractions;
 using NetAgent.LLM.Extensions;
-using NetAgent.LLM.Claude;
 using NetAgent.LLM.OpenAI;
-using NetAgent.LLM.Gemini;
-using NetAgent.LLM.DeepSeek;
+using NetAgent.Memory.SemanticQdrant.Models;
+using Microsoft.Extensions.Options;
 
 class Program
 {
@@ -60,18 +59,24 @@ class Program
             }
         );
 
-        // Add multi-provider support and scan for plugins
-        builder.Services.AddMultiLLMProviders()
-            .Configure<ClaudeLLMOptions>(builder.Configuration.GetSection("NetAgent:LLM:Claude"))
-            .Configure<OpenAIOptions>(builder.Configuration.GetSection("NetAgent:LLM:OpenAI"))
-            .Configure<GeminiOptions>(builder.Configuration.GetSection("NetAgent:LLM:Gemini"))
-            .Configure<DeepSeekOptions>(builder.Configuration.GetSection("NetAgent:LLM:DeepSeek"))
-            .ScanAndRegisterLLMPlugins();
-        
+        // Register OpenAIProvider as the single LLM provider
+        builder.Services.Configure<OpenAIOptions>(builder.Configuration.GetSection("NetAgent:LLM:OpenAI"));
+        builder.Services.AddSingleton<OpenAIProvider>();
+
+        // Register OpenAIProvider via OpenAIProviderPlugin explicitly
+        builder.Services.AddSingleton<OpenAIProviderPlugin>();
+        builder.Services.AddSingleton(sp => sp.GetRequiredService<OpenAIProviderPlugin>().CreateProvider(sp));
+
+        // Configure QdrantOptions
+        builder.Services.Configure<QdrantOptions>(builder.Configuration.GetSection("NetAgent:Memory:Qdrant"));
+
         var host = builder.Build();
         var serviceProvider = host.Services;
 
-        // Create agents using registered MultiLLMProvider
+        // Retrieve QdrantOptions
+        var qdrantOptions = serviceProvider.GetRequiredService<IOptions<QdrantOptions>>().Value;
+
+        // Create agents using OpenAIProvider
         var agentFactory = serviceProvider.GetRequiredService<IAgentFactory>();
 
         var developerAgent = await agentFactory.CreateAgent(new AgentOptions
@@ -87,7 +92,7 @@ class Program
                 MaxTokens = 4000,
                 RelevanceThreshold = 0.7f
             },
-            PreferredProviders = ["Claude"], // Specify preferred providers for developer agent
+            PreferredProviders = ["openai"], // Specify preferred providers for developer agent
         });
 
         var productOwnerAgent = await agentFactory.CreateAgent(new AgentOptions
@@ -103,7 +108,7 @@ class Program
                 MaxTokens = 3000,
                 RelevanceThreshold = 0.8f
             },
-            PreferredProviders = ["Claude"], // Product Owner prefers Claude
+            PreferredProviders = ["openai"], // Product Owner prefers Claude
         });
 
         var scrumMasterAgent = await agentFactory.CreateAgent(new AgentOptions
@@ -119,7 +124,7 @@ class Program
                 MaxTokens = 3000,
                 RelevanceThreshold = 0.75f
             },
-            PreferredProviders = ["Claude"], // Scrum Master can use DeepSeek or OpenAI
+            PreferredProviders = ["openai"], // Scrum Master can use DeepSeek or OpenAI
         });
 
         // Start the discussion about Azure SSO authentication story

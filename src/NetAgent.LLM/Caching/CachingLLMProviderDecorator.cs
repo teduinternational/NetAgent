@@ -88,5 +88,10 @@ namespace NetAgent.LLM.Caching
             var hash = sha256.ComputeHash(data);
             return $"{Name}:{Convert.ToBase64String(hash)}";
         }
+
+        public Task<float[]> GetEmbeddingAsync(string input)
+        {
+            return _innerProvider.GetEmbeddingAsync(input);
+        }
     }
 }

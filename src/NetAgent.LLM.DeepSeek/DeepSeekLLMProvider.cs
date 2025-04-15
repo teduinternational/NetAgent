@@ -18,7 +18,7 @@ namespace NetAgent.LLM.DeepSeek
             _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {_options.ApiKey}");
         }
 
-        public string Name => "DeepSeek";
+        public string Name => "deepseek";
 
         public async Task<LLMResponse> GenerateAsync(Prompt prompt)
         {
@@ -66,6 +66,29 @@ namespace NetAgent.LLM.DeepSeek
             {
                 return false;
             }
+        }
+
+        public async Task<float[]> GetEmbeddingAsync(string input)
+        {
+            if (string.IsNullOrWhiteSpace(input))
+            {
+                throw new ArgumentException("Input cannot be null or whitespace.", nameof(input));
+            }
+
+            var requestBody = new
+            {
+                model = _options.EmbeddingModel,
+                input
+            };
+
+            var response = await _httpClient.PostAsJsonAsync("https://api.deepseek.com/v1/embeddings", requestBody);
+            response.EnsureSuccessStatusCode();
+
+            var result = await response.Content.ReadFromJsonAsync<JsonElement>();
+            var embedding = result.GetProperty("data")[0].GetProperty("embedding").EnumerateArray()
+                .Select(x => x.GetSingle()).ToArray();
+
+            return embedding;
         }
     }
 }
